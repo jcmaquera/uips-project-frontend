@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../utils/axiosInstance";
+import Sidebar from "../components/Sidebar";
 
 const Home = () => {
   const [userInfo, setUserInfo] = useState(null);
@@ -31,6 +32,7 @@ const Home = () => {
   return (
     <>
       <Navbar userInfo={userInfo} />
+      <Sidebar />
     </>
   );
 };
