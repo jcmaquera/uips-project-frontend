@@ -6,12 +6,13 @@ import {
   TextField,
   Button,
   Grid,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   Typography,
   Box,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
+  Alert,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 
@@ -19,118 +20,135 @@ const AddItem = () => {
   const [userInfo, setUserInfo] = useState(null);
   const [items, setItems] = useState([]);
   const [itemType, setItemType] = useState("");
-  const [itemDescription, setItemDescription] = useState("");
-  const [sizeOrSource, setSizeOrSource] = useState("");
-  const [quantity, setQuantity] = useState("");
-  const [serialNumber, setSerialNumber] = useState("");
-  const [deliveryNumber, setDeliveryNumber] = useState(""); // Delivery Number state
-  const [openModal, setOpenModal] = useState(false); // Modal open state
-  const [successMessage, setSuccessMessage] = useState(""); // Success message state
+  const [itemDesc, setItemDesc] = useState("");
+  const [sizeSource, setSizeSource] = useState("");
+  const [serialNo, setSerialNo] = useState("");
+  const [successMessage, setSuccessMessage] = useState(false); // To control the visibility of the alert
 
   const navigate = useNavigate();
 
-  // Get User Info
-  const getUserInfo = async () => {
-    try {
-      const response = await axiosInstance.get("/get-user");
-      if (response.data && response.data.user) {
-        setUserInfo(response.data.user);
-      }
-    } catch (error) {
-      if (error.response.status === 401) {
-        localStorage.clear();
-        navigate("/login");
-      }
-    }
-  };
-
+  // Fetch user info and items on load
   useEffect(() => {
-    getUserInfo();
-  }, []);
+    const getUserInfo = async () => {
+      try {
+        const response = await axiosInstance.get("/get-user");
+        if (response.data && response.data.user) {
+          setUserInfo(response.data.user);
+        }
+      } catch (error) {
+        if (error.response.status === 401) {
+          localStorage.clear();
+          navigate("/login");
+        }
+      }
+    };
 
-  // Column definition for DataGrid
+    const getItems = async () => {
+      try {
+        const response = await axiosInstance.get("/get-items");
+        if (response.data && response.data.items) {
+          setItems(response.data.items);
+        }
+      } catch (error) {
+        console.error("Error fetching items:", error);
+      }
+    };
+
+    getUserInfo();
+    getItems();
+  }, [navigate]);
+
   const columns = [
     { field: "itemType", headerName: "Item Type", flex: 1, minWidth: 150 },
     {
-      field: "itemDescription",
+      field: "itemDesc",
       headerName: "Item Description",
       flex: 2,
       minWidth: 200,
     },
     {
-      field: "sizeOrSource",
+      field: "sizeSource",
       headerName: "Size/Source",
       flex: 1,
       minWidth: 150,
     },
-    { field: "quantity", headerName: "Quantity", flex: 1, minWidth: 150 },
     {
-      field: "serialNumber",
+      field: "serialNo",
       headerName: "Serial Number",
       flex: 1,
       minWidth: 150,
     },
   ];
 
-  // Handle form submission (adding new item)
-  const handleAddItem = () => {
-    if (
-      itemType &&
-      itemDescription &&
-      sizeOrSource &&
-      quantity &&
-      serialNumber
-    ) {
-      const newItem = {
-        id: items.length + 1, // Generate unique ID
-        itemType,
-        itemDescription,
-        sizeOrSource,
-        quantity,
-        serialNumber,
-      };
+  const itemTypes = [
+    "Jacket",
+    "P.E. Uniform",
+    "Regular Uniform",
+    "Scouting",
+    "School Supplies",
+    "Office Supplies",
+    "Books",
+    "Graduation",
+    "Others",
+  ];
 
-      setItems([...items, newItem]);
+  const handleAddItem = async () => {
+    if (itemType && itemDesc && sizeSource && serialNo) {
+      try {
+        const response = await axiosInstance.post("/add-item", {
+          itemType,
+          itemDesc,
+          sizeSource,
+          serialNo,
+        });
 
-      // Clear form fields after adding
-      setItemType("");
-      setItemDescription("");
-      setSizeOrSource("");
-      setQuantity("");
-      setSerialNumber("");
+        if (response.status === 200) {
+          const newItem = { ...response.data.item, id: response.data.item._id }; // Map _id to id
+          setItems([...items, newItem]); // Ensure id exists
+
+          // Clear input fields
+          setItemType("");
+          setItemDesc("");
+          setSizeSource("");
+          setSerialNo("");
+
+          setSuccessMessage(true); // Show success message
+          setTimeout(() => setSuccessMessage(false), 3000); // Hide after 3 seconds
+        } else {
+          alert("Error: " + (response.data.message || "Failed to add item"));
+        }
+      } catch (error) {
+        if (error.response) {
+          alert(
+            "Error: " + (error.response.data.message || "Failed to add item")
+          );
+        } else if (error.request) {
+          alert("Error: No response from server.");
+        } else {
+          alert("Error: " + error.message);
+        }
+      }
     } else {
       alert("Please fill all fields!");
     }
   };
 
-  // Handle the Submit button click
-  const handleSubmit = () => {
-    if (items.length > 0) {
-      setOpenModal(true); // Open modal if there are items
-    } else {
-      alert("No items to submit!");
-    }
-  };
-
-  // Handle Done button click in modal
-  const handleDone = () => {
-    // Clear the items table and close the modal
-    setItems([]);
-    setDeliveryNumber(""); // Reset Delivery Number
-    setOpenModal(false); // Close modal
-    setSuccessMessage("Items successfully submitted!"); // Show success message
-
-    // Hide success message after 3 seconds
-    setTimeout(() => {
-      setSuccessMessage(""); // Clear success message
-    }, 3000);
-  };
-
   return (
     <>
       <Navbar userInfo={userInfo} />
+
+      {/* Basic Alert message */}
+      {successMessage && (
+        <Alert
+          severity="success"
+          onClose={() => setSuccessMessage(false)} // Allow user to close the alert manually
+          sx={{ marginBottom: "20px" }} // Space between alert and other elements
+        >
+          Item successfully added!
+        </Alert>
+      )}
+
       <div style={{ padding: "30px" }}>
-        {/* Form Inputs */}
         <Grid
           container
           spacing={3}
@@ -138,50 +156,49 @@ const AddItem = () => {
           justifyContent="center"
           style={{ marginBottom: "20px" }}
         >
-          <Grid item xs={2}>
-            <TextField
-              label="Item Type"
-              value={itemType}
-              onChange={(e) => setItemType(e.target.value)}
-              fullWidth
-            />
+          {/* Input fields */}
+          <Grid item xs={12} sm={6} md={4} lg={3}>
+            <FormControl fullWidth>
+              <InputLabel>Item Type</InputLabel>
+              <Select
+                value={itemType}
+                onChange={(e) => setItemType(e.target.value)}
+                fullWidth
+              >
+                {itemTypes.map((type) => (
+                  <MenuItem key={type} value={type}>
+                    {type}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Grid>
-          <Grid item xs={3}>
+          <Grid item xs={12} sm={6} md={4} lg={3}>
             <TextField
               label="Item Description"
-              value={itemDescription}
-              onChange={(e) => setItemDescription(e.target.value)}
+              value={itemDesc}
+              onChange={(e) => setItemDesc(e.target.value)}
               fullWidth
             />
           </Grid>
-          <Grid item xs={2}>
+          <Grid item xs={12} sm={6} md={4} lg={3}>
             <TextField
               label="Size/Source"
-              value={sizeOrSource}
-              onChange={(e) => setSizeOrSource(e.target.value)}
+              value={sizeSource}
+              onChange={(e) => setSizeSource(e.target.value)}
               fullWidth
             />
           </Grid>
-          <Grid item xs={2}>
-            <TextField
-              label="Quantity"
-              type="number"
-              value={quantity}
-              onChange={(e) => setQuantity(e.target.value)}
-              fullWidth
-            />
-          </Grid>
-          <Grid item xs={2}>
+          <Grid item xs={12} sm={6} md={4} lg={3}>
             <TextField
               label="Serial Number"
-              value={serialNumber}
-              onChange={(e) => setSerialNumber(e.target.value)}
+              value={serialNo}
+              onChange={(e) => setSerialNo(e.target.value)}
               fullWidth
             />
           </Grid>
         </Grid>
 
-        {/* Add Button aligned with Input Fields */}
         <Grid
           container
           justifyContent="center"
@@ -194,86 +211,20 @@ const AddItem = () => {
           </Grid>
         </Grid>
 
-        {/* DataGrid Table to Display Items */}
-        <div style={{ height: 400, width: "100%", marginTop: "20px" }}>
+        <Box sx={{ height: 400, width: "100%" }}>
           <DataGrid
             rows={items}
             columns={columns}
             pageSize={5}
             disableSelectionOnClick
+            getRowId={(row) => row._id} // Ensure unique ID for each row
             sx={{
-              ".MuiDataGrid-columnHeader": {
-                fontWeight: "bold",
-              },
-              width: "100%",
+              ".MuiDataGrid-columnHeader": { fontWeight: "bold" },
+              overflowX: "auto", // Make it scrollable on smaller screens
             }}
           />
-        </div>
-
-        {/* Submit Button */}
-        <Grid container justifyContent="center" style={{ marginTop: "20px" }}>
-          <Grid item>
-            <Button
-              variant="contained"
-              color="secondary"
-              onClick={handleSubmit}
-            >
-              Submit
-            </Button>
-          </Grid>
-        </Grid>
-
-        {/* Success Message */}
-        {successMessage && (
-          <Box
-            sx={{
-              marginTop: "20px",
-              padding: "10px",
-              backgroundColor: "#4caf50",
-              color: "#fff",
-              borderRadius: "5px",
-              textAlign: "center",
-            }}
-          >
-            <Typography variant="h6">{successMessage}</Typography>
-          </Box>
-        )}
+        </Box>
       </div>
-
-      {/* Modal for Summary and Delivery Number */}
-      <Dialog
-        open={openModal}
-        onClose={() => setOpenModal(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>Item Summary</DialogTitle>
-        <DialogContent>
-          <div>
-            <Typography variant="h6">Items Added:</Typography>
-            <ul>
-              {items.map((item, index) => (
-                <li key={index}>
-                  <strong>{item.itemType}</strong> - {item.itemDescription} -{" "}
-                  {item.sizeOrSource} - {item.quantity} - {item.serialNumber}
-                </li>
-              ))}
-            </ul>
-            <TextField
-              label="Delivery Number"
-              value={deliveryNumber}
-              onChange={(e) => setDeliveryNumber(e.target.value)}
-              fullWidth
-              style={{ marginTop: "20px" }}
-            />
-          </div>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDone} color="primary">
-            Done
-          </Button>
-        </DialogActions>
-      </Dialog>
     </>
   );
 };

@@ -15,14 +15,14 @@ import {
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 
-const Checkout = () => {
+const AddDelivery = () => {
   const [serialNumber, setSerialNumber] = useState(""); // Serial number input state
   const [quantity, setQuantity] = useState(1); // Quantity input state
   const [items, setItems] = useState([]); // Items to be displayed in the table
   const [successMessage, setSuccessMessage] = useState(false); // Success message for adding items
   const [loading, setLoading] = useState(false); // Loading state
   const [openModal, setOpenModal] = useState(false); // Modal open state
-  const [checkoutNumber, setCheckoutNumber] = useState(""); // Checkout Number input state
+  const [deliveryNumber, setDeliveryNumber] = useState(""); // Delivery Number input state
   const [submissionSuccess, setSubmissionSuccess] = useState(false); // Submission success state
   const [userInfo, setUserInfo] = useState(null);
 
@@ -37,7 +37,7 @@ const Checkout = () => {
     },
     { field: "sizeSource", headerName: "Size/Source", flex: 1, minWidth: 150 },
     { field: "serialNo", headerName: "Serial Number", flex: 1, minWidth: 150 },
-    { field: "quantity", headerName: "Quantity", flex: 1, minWidth: 100 },
+    { field: "quantity", headerName: "Quantity", flex: 1, minWidth: 100 }, // Add Quantity column
   ];
 
   const getUserInfo = async () => {
@@ -115,34 +115,35 @@ const Checkout = () => {
     }
   };
 
-  const handleCheckout = () => {
-    if (!checkoutNumber) {
-      alert("Please enter a Checkout Number!");
+  const handleAddDelivery = () => {
+    if (!deliveryNumber) {
+      alert("Please enter a Delivery Number!");
       return;
     }
 
-    // Prepare the items for checkout submission
+    // Prepare the items for delivery submission by ensuring each item has the correct item._id
     const formattedItems = items.map((item) => ({
       item: item._id, // Use _id from the item object
       quantity: item.quantity,
     }));
 
-    // Log the formatted items for debugging
-    console.log("Formatted Items before submitting checkout:", formattedItems);
+    // Log the formatted items
+    console.log("Formatted Items before submitting delivery:", formattedItems);
 
-    // Log the checkout number for debugging
-    console.log("Checkout Number:", checkoutNumber);
+    // Log the delivery number for debugging
+    console.log("Delivery Number:", deliveryNumber);
 
     // Now submit the data to the backend (you can replace this with your actual API call)
+    // Example of how you might send the data:
     setLoading(true);
     axiosInstance
-      .post("/checkout", {
-        checkoutNumber: checkoutNumber,
-        checkoutDate: new Date(),
+      .post("/add-delivery", {
+        deliveryNumber: deliveryNumber,
+        deliveryDate: new Date(),
         items: formattedItems,
       })
       .then((response) => {
-        console.log("Checkout submitted successfully:", response.data);
+        console.log("Delivery submitted successfully:", response.data);
         setSubmissionSuccess(true);
         setTimeout(() => setSubmissionSuccess(false), 3000); // Hide success message after 3 seconds
 
@@ -150,10 +151,10 @@ const Checkout = () => {
         setSerialNumber("");
         setQuantity(1);
         setItems([]);
-        setCheckoutNumber("");
+        setDeliveryNumber("");
       })
       .catch((error) => {
-        console.error("Error submitting checkout:", error);
+        console.error("Error submitting delivery:", error);
       })
       .finally(() => {
         setLoading(false);
@@ -169,7 +170,7 @@ const Checkout = () => {
 
   return (
     <>
-      <Navbar userInfo={userInfo}/>
+      <Navbar userInfo={userInfo} />
 
       {successMessage && (
         <Alert severity="success" sx={{ marginBottom: "20px" }}>
@@ -179,7 +180,7 @@ const Checkout = () => {
 
       {submissionSuccess && (
         <Alert severity="success" sx={{ marginBottom: "20px" }}>
-          Checkout submitted successfully!
+          Delivery submitted successfully!
         </Alert>
       )}
 
@@ -231,7 +232,7 @@ const Checkout = () => {
           />
         </Box>
 
-        {/* Checkout Button */}
+        {/* Add Delivery Button */}
         <Grid container justifyContent="center" style={{ marginTop: "30px" }}>
           <Grid item>
             <Button
@@ -239,32 +240,32 @@ const Checkout = () => {
               color="secondary"
               onClick={() => setOpenModal(true)}
             >
-              Proceed to Checkout
+              Add Delivery
             </Button>
           </Grid>
         </Grid>
       </div>
 
-      {/* Modal for Checkout Confirmation */}
+      {/* Modal for Delivery Confirmation */}
       <Dialog
         open={openModal}
         onClose={() => setOpenModal(false)}
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle>Confirm Checkout</DialogTitle>
+        <DialogTitle>Confirm Delivery</DialogTitle>
         <DialogContent>
           <Typography variant="h6" gutterBottom>
-            Please provide the checkout number and confirm the items.
+            Please provide the delivery number and confirm the items.
           </Typography>
           <TextField
-            label="Checkout Number"
+            label="Delivery Number"
             fullWidth
-            value={checkoutNumber}
-            onChange={(e) => setCheckoutNumber(e.target.value)}
+            value={deliveryNumber}
+            onChange={(e) => setDeliveryNumber(e.target.value)}
             style={{ marginBottom: "20px" }}
           />
-          <Typography variant="body1">Items in this checkout:</Typography>
+          <Typography variant="body1">Items in this delivery:</Typography>
           <ul>
             {items.map((item, index) => (
               <li key={index}>
@@ -275,8 +276,8 @@ const Checkout = () => {
           </ul>
         </DialogContent>
         <DialogActions>
-          <Button color="primary" onClick={handleCheckout}>
-            {loading ? "Submitting..." : "Submit Checkout"}
+          <Button color="primary" onClick={handleAddDelivery}>
+            {loading ? "Submitting..." : "Submit Delivery"}
           </Button>
           <Button onClick={() => setOpenModal(false)}>Cancel</Button>
         </DialogActions>
@@ -285,4 +286,4 @@ const Checkout = () => {
   );
 };
 
-export default Checkout;
+export default AddDelivery;

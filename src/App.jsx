@@ -7,6 +7,7 @@ import Sidebar from "./components/Sidebar";
 import AddItem from "./pages/AddItem";
 import DeleteItem from "./pages/DeleteItem";
 import GenerateReports from "./pages/GenerateReports";
+import AddDelivery from "./pages/AddDelivery";
 
 const App = () => {
   return (
@@ -46,6 +47,7 @@ const MainRoutes = () => {
       <Route element={<DashboardLayout />}>
         <Route path="/dashboard" element={<Home />} />
         <Route path="/add-item" element={<AddItem />} />
+        <Route path="/add-delivery" element={<AddDelivery />} />
         <Route path="/delete-item" element={<DeleteItem />} />
         <Route path="/generate-reports" element={<GenerateReports />} />
       </Route>

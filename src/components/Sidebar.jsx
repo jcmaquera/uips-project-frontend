@@ -70,6 +70,14 @@ const Sidebar = () => {
                 </li>
                 <li className="py-1">
                   <NavLink
+                    to="/add-delivery"
+                    className={({ isActive }) => (isActive ? "font-bold" : "")}
+                  >
+                    Add Delivery
+                  </NavLink>
+                </li>
+                <li className="py-1">
+                  <NavLink
                     to="/delete-item"
                     className={({ isActive }) => (isActive ? "font-bold" : "")}
                   >
