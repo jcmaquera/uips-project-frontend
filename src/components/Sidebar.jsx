@@ -92,6 +92,14 @@ const Sidebar = () => {
                     Generate Reports
                   </NavLink>
                 </li>
+                <li className="py-1">
+                  <NavLink
+                    to="/inventory-summary"
+                    className={({ isActive }) => (isActive ? "font-bold" : "")}
+                  >
+                    Inventory Summary
+                  </NavLink>
+                </li>
               </ul>
             )}
           </li>
