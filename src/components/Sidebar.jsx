@@ -73,7 +73,7 @@ const Sidebar = () => {
                     to="/add-delivery"
                     className={({ isActive }) => (isActive ? "font-bold" : "")}
                   >
-                    Add Delivery
+                    Checkin Items
                   </NavLink>
                 </li>
                 <li className="py-1">

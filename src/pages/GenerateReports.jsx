@@ -186,7 +186,7 @@ const GenerateReports = () => {
                 setOpenDateDialog(true); // Open date range dialog
               }}
             >
-              Report by Delivery Number
+              Report by Delivery
             </Button>
           </Grid>
           <Grid item xs={12} sm={6} md={4} lg={3}>
@@ -199,7 +199,7 @@ const GenerateReports = () => {
                 setOpenDateDialog(true); // Open date range dialog
               }}
             >
-              Report by Invoice Number
+              Report by Receipt
             </Button>
           </Grid>
         </Grid>
