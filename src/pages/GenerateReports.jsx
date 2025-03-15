@@ -13,7 +13,7 @@ import {
   DialogTitle,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
-import * as XLSX from "xlsx"; // Importing XLSX library
+import * as XLSX from "xlsx-js-style"; // Importing XLSX library
 
 const GenerateReports = () => {
   const [userInfo, setUserInfo] = useState(null);
@@ -138,32 +138,34 @@ const GenerateReports = () => {
       ]
     );
 
-    // Create new workbook & worksheet
-    const workbook = XLSX.utils.book_new();
+    // Create worksheet & add data
     const worksheet = XLSX.utils.aoa_to_sheet([...headers, ...formattedData]);
 
-    // Apply column widths based on header text length
+    // Define header style
+    const headerStyle = {
+      font: { bold: true, sz: 14, color: { rgb: "FFFFFF" } }, // White bold text, size 14
+      fill: { fgColor: { rgb: "4F81BD" } }, // Matte blue background
+      alignment: { horizontal: "center", vertical: "center" },
+    };
+
+    // Apply styles to headers
+    headers[0].forEach((_, colIndex) => {
+      const cellRef = XLSX.utils.encode_cell({ r: 0, c: colIndex });
+      if (worksheet[cellRef]) {
+        worksheet[cellRef].s = headerStyle;
+      }
+    });
+
+    // Set column widths dynamically based on header size
     worksheet["!cols"] = headers[0].map((header) => ({
       wch: header.length + 5,
     }));
 
-    // Manually style headers (workaround)
-    const range = XLSX.utils.decode_range(worksheet["!ref"]); // Get worksheet range
-    for (let C = range.s.c; C <= range.e.c; C++) {
-      const cell_address = XLSX.utils.encode_cell({ r: 0, c: C }); // Get cell reference
-      if (!worksheet[cell_address]) continue; // Skip if cell doesn't exist
+    // Create workbook & append styled worksheet
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Styled Report");
 
-      worksheet[cell_address].s = {
-        font: { bold: true, sz: 14, color: { rgb: "FFFFFF" } }, // White text, bold, larger
-        fill: { fgColor: { rgb: "4F81BD" } }, // Matte blue background
-        alignment: { horizontal: "center", vertical: "center" },
-      };
-    }
-
-    // Append worksheet to workbook
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
-
-    // Export Excel file
+    // Export the Excel file
     XLSX.writeFile(workbook, "Styled_Report.xlsx");
   };
 
