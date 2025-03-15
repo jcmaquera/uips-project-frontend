@@ -109,17 +109,30 @@ const GenerateReports = () => {
 
   // Export to Excel function
   const exportToExcel = () => {
-    const headers = [
-      [
-        "Item Type",
-        "Item Description",
-        "Size/Source",
-        "Quantity",
-        "Serial Number",
-        "Delivery Number",
-      ],
-    ];
+    // Define headers dynamically based on report type
+    const headers = isDeliveryReport
+      ? [
+          [
+            "Item Type",
+            "Item Description",
+            "Size/Source",
+            "Quantity",
+            "Serial Number",
+            "Delivery Number",
+          ],
+        ]
+      : [
+          [
+            "Item Type",
+            "Item Description",
+            "Size/Source",
+            "Quantity",
+            "Serial Number",
+            "Checkout Number",
+          ],
+        ];
 
+    // Format data based on report type
     const formattedData = reportData.map(
       ({
         itemType,
@@ -128,14 +141,25 @@ const GenerateReports = () => {
         quantity,
         serialNumber,
         deliveryNumber,
-      }) => [
-        itemType,
-        itemDescription,
-        sizeOrSource,
-        quantity,
-        serialNumber,
-        deliveryNumber || "",
-      ]
+        checkoutNumber,
+      }) =>
+        isDeliveryReport
+          ? [
+              itemType,
+              itemDescription,
+              sizeOrSource,
+              quantity,
+              serialNumber,
+              deliveryNumber || "",
+            ]
+          : [
+              itemType,
+              itemDescription,
+              sizeOrSource,
+              quantity,
+              serialNumber,
+              checkoutNumber || "",
+            ]
     );
 
     // Create worksheet & add data
@@ -143,7 +167,7 @@ const GenerateReports = () => {
 
     // Define header style
     const headerStyle = {
-      font: { bold: true, sz: 14, color: { rgb: "FFFFFF" } }, // White bold text, size 14
+      font: { bold: true, sz: 14, color: { rgb: "FFFFFF" } }, // White bold text
       fill: { fgColor: { rgb: "4F81BD" } }, // Matte blue background
       alignment: { horizontal: "center", vertical: "center" },
     };
@@ -175,6 +199,18 @@ const GenerateReports = () => {
   }, []);
 
   const columns = [
+    {
+      field: isDeliveryReport ? "deliveryNumber" : "checkoutNumber",
+      headerName: isDeliveryReport ? "Delivery Number" : "Checkout Number",
+      flex: 1,
+      minWidth: 150,
+    },
+    {
+      field: "deliveryDate",
+      headerName: "Date",
+      flex: 1,
+      minWidth: 140,
+    },
     { field: "itemType", headerName: "Item Type", flex: 1, minWidth: 120 },
     {
       field: "itemDescription",
@@ -194,13 +230,6 @@ const GenerateReports = () => {
       headerName: "Serial Number",
       flex: 1,
       minWidth: 130,
-    },
-    {
-      field: "deliveryNumber",
-      headerName: "Delivery Number",
-      flex: 1,
-      minWidth: 100,
-      hide: !isDeliveryReport, // Hide this column if it's not a delivery report
     },
   ];
 
