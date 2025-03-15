@@ -23,6 +23,29 @@ const GenerateReports = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [isDeliveryReport, setIsDeliveryReport] = useState(true); // Flag for report type
+  const [columns, setColumns] = useState([
+    { field: "deliveryDate", headerName: "Date", flex: 1, minWidth: 140 },
+    { field: "itemType", headerName: "Item Type", flex: 1, minWidth: 120 },
+    {
+      field: "itemDescription",
+      headerName: "Item Description",
+      flex: 1.5,
+      minWidth: 160,
+    },
+    {
+      field: "sizeOrSource",
+      headerName: "Size/Source",
+      flex: 1,
+      minWidth: 120,
+    },
+    { field: "quantity", headerName: "Quantity", flex: 1, minWidth: 100 },
+    {
+      field: "serialNumber",
+      headerName: "Serial Number",
+      flex: 1,
+      minWidth: 130,
+    },
+  ]);
 
   const navigate = useNavigate();
 
@@ -99,6 +122,50 @@ const GenerateReports = () => {
           }))
         );
         setReportData(mappedReportData);
+
+        // Dynamically update columns after generating the report
+        setColumns([
+          {
+            field: isDeliveryReport ? "deliveryNumber" : "checkoutNumber",
+            headerName: isDeliveryReport
+              ? "Delivery Number"
+              : "Checkout Number",
+            flex: 1,
+            minWidth: 150,
+          },
+          {
+            field: "deliveryDate",
+            headerName: "Date",
+            flex: 1,
+            minWidth: 140,
+          },
+          {
+            field: "itemType",
+            headerName: "Item Type",
+            flex: 1,
+            minWidth: 120,
+          },
+          {
+            field: "itemDescription",
+            headerName: "Item Description",
+            flex: 1.5,
+            minWidth: 160,
+          },
+          {
+            field: "sizeOrSource",
+            headerName: "Size/Source",
+            flex: 1,
+            minWidth: 120,
+          },
+          { field: "quantity", headerName: "Quantity", flex: 1, minWidth: 100 },
+          {
+            field: "serialNumber",
+            headerName: "Serial Number",
+            flex: 1,
+            minWidth: 130,
+          },
+        ]);
+
         setOpenDateDialog(false); // Close date picker dialog
       }
     } catch (error) {
@@ -197,41 +264,6 @@ const GenerateReports = () => {
     getUserInfo();
     fetchInventoryData();
   }, []);
-
-  const columns = [
-    {
-      field: isDeliveryReport ? "deliveryNumber" : "checkoutNumber",
-      headerName: isDeliveryReport ? "Delivery Number" : "Checkout Number",
-      flex: 1,
-      minWidth: 150,
-    },
-    {
-      field: "deliveryDate",
-      headerName: "Date",
-      flex: 1,
-      minWidth: 140,
-    },
-    { field: "itemType", headerName: "Item Type", flex: 1, minWidth: 120 },
-    {
-      field: "itemDescription",
-      headerName: "Item Description",
-      flex: 1.5,
-      minWidth: 160,
-    },
-    {
-      field: "sizeOrSource",
-      headerName: "Size/Source",
-      flex: 1,
-      minWidth: 120,
-    },
-    { field: "quantity", headerName: "Quantity", flex: 1, minWidth: 100 },
-    {
-      field: "serialNumber",
-      headerName: "Serial Number",
-      flex: 1,
-      minWidth: 130,
-    },
-  ];
 
   return (
     <div>
