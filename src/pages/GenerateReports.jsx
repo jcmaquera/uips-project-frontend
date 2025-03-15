@@ -109,32 +109,47 @@ const GenerateReports = () => {
 
   // Export to Excel function
   const exportToExcel = () => {
-    const formattedData = reportData.map(({ 
-      itemType, 
-      itemDescription, 
-      sizeOrSource, 
-      quantity, 
-      serialNumber, 
-      deliveryNumber 
-    }) => ({
-      "Item Type": itemType,
-      "Item Description": itemDescription,
-      "Size/Source": sizeOrSource,
-      "Quantity": quantity,
-      "Serial Number": serialNumber,
-      "Delivery Number": deliveryNumber || "", 
-    }));
-  
-    const worksheet = XLSX.utils.json_to_sheet(formattedData);
-  
-    // Adjust column order manually
+    // Define column headers explicitly
+    const headers = [
+      [
+        "Item Type",
+        "Item Description",
+        "Size/Source",
+        "Quantity",
+        "Serial Number",
+        "Delivery Number",
+      ],
+    ];
+
+    // Format data by extracting only required fields
+    const formattedData = reportData.map(
+      ({
+        itemType,
+        itemDescription,
+        sizeOrSource,
+        quantity,
+        serialNumber,
+        deliveryNumber,
+      }) => [
+        itemType,
+        itemDescription,
+        sizeOrSource,
+        quantity,
+        serialNumber,
+        deliveryNumber || "", // Ensure empty cell if missing
+      ]
+    );
+
+    // Merge headers and data
+    const worksheet = XLSX.utils.aoa_to_sheet([...headers, ...formattedData]);
+
+    // Create workbook and append worksheet
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
-  
-    // Generate Excel file and trigger download
+
+    // Export the Excel file
     XLSX.writeFile(workbook, "report.xlsx");
   };
-  
 
   useEffect(() => {
     getUserInfo();
@@ -170,7 +185,6 @@ const GenerateReports = () => {
       hide: !isDeliveryReport, // Hide this column if it's not a delivery report
     },
   ];
-  
 
   return (
     <div>
