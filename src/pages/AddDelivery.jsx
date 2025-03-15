@@ -181,6 +181,9 @@ const AddDelivery = () => {
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
         const sheetData = XLSX.utils.sheet_to_json(sheet);
 
+        // Clear existing items to avoid duplication
+        const newItems = [...items];
+
         // Process the data from the sheet
         sheetData.forEach(async (row) => {
           const { serialNo, quantity } = row;
@@ -198,23 +201,22 @@ const AddDelivery = () => {
                   quantity: quantity,
                 };
 
-                const existingItemIndex = items.findIndex(
+                const existingItemIndex = newItems.findIndex(
                   (item) => item.serialNo === serialNo
                 );
 
                 if (existingItemIndex !== -1) {
                   // Update the quantity if the item already exists
-                  const updatedItems = [...items];
-                  updatedItems[existingItemIndex] = {
-                    ...updatedItems[existingItemIndex],
-                    quantity:
-                      updatedItems[existingItemIndex].quantity + quantity,
+                  newItems[existingItemIndex] = {
+                    ...newItems[existingItemIndex],
+                    quantity: newItems[existingItemIndex].quantity + quantity,
                   };
-                  setItems(updatedItems);
                 } else {
                   // Add the new item to the list
-                  setItems([...items, newItem]);
+                  newItems.push(newItem);
                 }
+
+                setItems([...newItems]); // Update the state with new items
               } else {
                 alert(`Item not found for serial number: ${serialNo}`);
               }
@@ -288,79 +290,44 @@ const AddDelivery = () => {
           justifyContent="center"
           style={{ marginBottom: "20px" }}
         >
-          <Grid item xs={4}>
-            <Button variant="contained" component="label" fullWidth>
-              Upload Excel
-              <input
-                type="file"
-                accept=".xlsx, .xls"
-                hidden
-                onChange={handleFileUpload}
-              />
-            </Button>
+          <Grid item xs={3}>
+            <input
+              type="file"
+              accept=".xlsx, .xls"
+              onChange={handleFileUpload}
+              style={{ width: "100%" }}
+            />
           </Grid>
         </Grid>
 
-        <Box sx={{ height: 400, width: "100%" }}>
+        {/* DataGrid to display added items */}
+        <div style={{ height: 400, width: "100%" }}>
           <DataGrid
             rows={items}
             columns={columns}
             pageSize={5}
-            disableSelectionOnClick
-            getRowId={(row) => row.id}
+            rowsPerPageOptions={[5]}
+            checkboxSelection
           />
-        </Box>
+        </div>
 
-        {/* Add Delivery Button */}
-        <Grid container justifyContent="center" style={{ marginTop: "30px" }}>
-          <Grid item>
-            <Button
-              variant="contained"
-              color="secondary"
-              onClick={() => setOpenModal(true)}
-            >
-              Add Delivery
-            </Button>
-          </Grid>
-        </Grid>
+        {/* Delivery Modal */}
+        <Dialog open={openModal} onClose={() => setOpenModal(false)}>
+          <DialogTitle>Submit Delivery</DialogTitle>
+          <DialogContent>
+            <Typography variant="body1">Enter Delivery Number:</Typography>
+            <TextField
+              value={deliveryNumber}
+              onChange={(e) => setDeliveryNumber(e.target.value)}
+              fullWidth
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenModal(false)}>Cancel</Button>
+            <Button onClick={handleAddDelivery}>Submit</Button>
+          </DialogActions>
+        </Dialog>
       </div>
-
-      {/* Modal for Delivery Confirmation */}
-      <Dialog
-        open={openModal}
-        onClose={() => setOpenModal(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>Confirm Delivery</DialogTitle>
-        <DialogContent>
-          <Typography variant="h6" gutterBottom>
-            Please provide the delivery number and confirm the items.
-          </Typography>
-          <TextField
-            label="Delivery Number"
-            fullWidth
-            value={deliveryNumber}
-            onChange={(e) => setDeliveryNumber(e.target.value)}
-            style={{ marginBottom: "20px" }}
-          />
-          <Typography variant="body1">Items in this delivery:</Typography>
-          <ul>
-            {items.map((item, index) => (
-              <li key={index}>
-                <strong>{item.itemType}</strong> - {item.itemDesc} -{" "}
-                {item.sizeSource} - {item.serialNo} - {item.quantity} pcs
-              </li>
-            ))}
-          </ul>
-        </DialogContent>
-        <DialogActions>
-          <Button color="primary" onClick={handleAddDelivery}>
-            {loading ? "Submitting..." : "Submit Delivery"}
-          </Button>
-          <Button onClick={() => setOpenModal(false)}>Cancel</Button>
-        </DialogActions>
-      </Dialog>
     </>
   );
 };
