@@ -123,26 +123,6 @@ const GenerateReports = () => {
   }, []);
 
   const columns = [
-    {
-      field: "deliveryNumber",
-      headerName: "Delivery Number",
-      flex: 1,
-      minWidth: 100,
-      hide: !isDeliveryReport, // Hide this column if it's not the delivery report
-    },
-    {
-      field: "checkoutNumber",
-      headerName: "Checkout Number",
-      flex: 1,
-      minWidth: 100,
-      hide: isDeliveryReport, // Hide this column if it's the delivery report
-    },
-    {
-      field: "deliveryDate",
-      headerName: "Date",
-      flex: 1,
-      minWidth: 140,
-    },
     { field: "itemType", headerName: "Item Type", flex: 1, minWidth: 120 },
     {
       field: "itemDescription",
@@ -163,7 +143,15 @@ const GenerateReports = () => {
       flex: 1,
       minWidth: 130,
     },
+    {
+      field: "deliveryNumber",
+      headerName: "Delivery Number",
+      flex: 1,
+      minWidth: 100,
+      hide: !isDeliveryReport, // Hide this column if it's not a delivery report
+    },
   ];
+  
 
   return (
     <div>
