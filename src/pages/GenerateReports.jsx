@@ -99,6 +99,8 @@ const GenerateReports = () => {
         endDate,
       });
 
+      console.log("API Response:", response.data); // Debugging output
+
       if (
         response.data &&
         response.data[isDeliveryReport ? "deliveries" : "checkouts"]
@@ -107,10 +109,9 @@ const GenerateReports = () => {
           isDeliveryReport ? "deliveries" : "checkouts"
         ].flatMap((item) =>
           item.items.map((reportItem) => ({
-            id: `${item._id}-${reportItem.item.serialNo}`, // Unique ID combining delivery or checkout and serial number
+            id: `${item._id}-${reportItem.item.serialNo}`,
             [isDeliveryReport ? "deliveryNumber" : "checkoutNumber"]:
               item[isDeliveryReport ? "deliveryNumber" : "checkoutNumber"],
-            // Format the date to only include the date part (no time)
             deliveryDate: new Date(
               item.checkoutDate || item.deliveryDate
             ).toLocaleDateString("en-GB"),
@@ -121,52 +122,14 @@ const GenerateReports = () => {
             serialNumber: reportItem.item.serialNo,
           }))
         );
+
+        console.log("Mapped Report Data:", mappedReportData); // Debugging output
+
         setReportData(mappedReportData);
-
-        // Dynamically update columns after generating the report
-        setColumns([
-          {
-            field: isDeliveryReport ? "deliveryNumber" : "checkoutNumber",
-            headerName: isDeliveryReport
-              ? "Delivery Number"
-              : "Checkout Number",
-            flex: 1,
-            minWidth: 150,
-          },
-          {
-            field: "deliveryDate",
-            headerName: "Date",
-            flex: 1,
-            minWidth: 140,
-          },
-          {
-            field: "itemType",
-            headerName: "Item Type",
-            flex: 1,
-            minWidth: 120,
-          },
-          {
-            field: "itemDescription",
-            headerName: "Item Description",
-            flex: 1.5,
-            minWidth: 160,
-          },
-          {
-            field: "sizeOrSource",
-            headerName: "Size/Source",
-            flex: 1,
-            minWidth: 120,
-          },
-          { field: "quantity", headerName: "Quantity", flex: 1, minWidth: 100 },
-          {
-            field: "serialNumber",
-            headerName: "Serial Number",
-            flex: 1,
-            minWidth: 130,
-          },
-        ]);
-
-        setOpenDateDialog(false); // Close date picker dialog
+        setOpenDateDialog(false);
+      } else {
+        console.error("Unexpected API response:", response.data);
+        alert("No data found for the selected date range.");
       }
     } catch (error) {
       console.error("Error generating report:", error);
