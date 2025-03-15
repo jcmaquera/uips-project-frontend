@@ -14,6 +14,7 @@ import {
   Typography,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
+import * as XLSX from "xlsx"; // Import xlsx library
 
 const AddDelivery = () => {
   const [serialNumber, setSerialNumber] = useState(""); // Serial number input state
@@ -134,7 +135,6 @@ const AddDelivery = () => {
     console.log("Delivery Number:", deliveryNumber);
 
     // Now submit the data to the backend (you can replace this with your actual API call)
-    // Example of how you might send the data:
     setLoading(true);
     axiosInstance
       .post("/add-delivery", {
@@ -165,6 +165,66 @@ const AddDelivery = () => {
   const handleKeyDown = (event) => {
     if (event.key === "Enter") {
       handleAddItem();
+    }
+  };
+
+  // Function to handle file upload and parsing
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const data = new Uint8Array(event.target.result);
+        const workbook = XLSX.read(data, { type: "array" });
+
+        // Assuming the first sheet contains the data
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const sheetData = XLSX.utils.sheet_to_json(sheet);
+
+        // Process the data from the sheet
+        sheetData.forEach(async (row) => {
+          const { serialNo, quantity } = row;
+
+          if (serialNo && quantity > 0) {
+            try {
+              const response = await axiosInstance.post("/get-item-by-serial", {
+                serialNo: serialNo,
+              });
+
+              if (response.data && response.data.item) {
+                const newItem = {
+                  ...response.data.item,
+                  id: response.data.item._id, // This is the _id from the Item document
+                  quantity: quantity,
+                };
+
+                const existingItemIndex = items.findIndex(
+                  (item) => item.serialNo === serialNo
+                );
+
+                if (existingItemIndex !== -1) {
+                  // Update the quantity if the item already exists
+                  const updatedItems = [...items];
+                  updatedItems[existingItemIndex] = {
+                    ...updatedItems[existingItemIndex],
+                    quantity:
+                      updatedItems[existingItemIndex].quantity + quantity,
+                  };
+                  setItems(updatedItems);
+                } else {
+                  // Add the new item to the list
+                  setItems([...items, newItem]);
+                }
+              } else {
+                alert(`Item not found for serial number: ${serialNo}`);
+              }
+            } catch (error) {
+              console.error("Error fetching item:", error);
+            }
+          }
+        });
+      };
+      reader.readAsArrayBuffer(file);
     }
   };
 
@@ -218,6 +278,25 @@ const AddDelivery = () => {
               disabled={loading}
             >
               {loading ? "Loading..." : "Add Item"}
+            </Button>
+          </Grid>
+        </Grid>
+
+        {/* Excel File Upload */}
+        <Grid
+          container
+          justifyContent="center"
+          style={{ marginBottom: "20px" }}
+        >
+          <Grid item xs={4}>
+            <Button variant="contained" component="label" fullWidth>
+              Upload Excel
+              <input
+                type="file"
+                accept=".xlsx, .xls"
+                hidden
+                onChange={handleFileUpload}
+              />
             </Button>
           </Grid>
         </Grid>
