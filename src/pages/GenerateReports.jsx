@@ -13,7 +13,7 @@ import {
   DialogTitle,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
-import * as XLSX from "xlsx"; // Importing XLSX library
+import * as XLSX from "xlsx-js-style"; // Importing XLSX library
 
 const GenerateReports = () => {
   const [userInfo, setUserInfo] = useState(null);
@@ -23,6 +23,29 @@ const GenerateReports = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [isDeliveryReport, setIsDeliveryReport] = useState(true); // Flag for report type
+  const [columns, setColumns] = useState([
+    { field: "deliveryDate", headerName: "Date", flex: 1, minWidth: 140 },
+    { field: "itemType", headerName: "Item Type", flex: 1, minWidth: 120 },
+    {
+      field: "itemDescription",
+      headerName: "Item Description",
+      flex: 1.5,
+      minWidth: 160,
+    },
+    {
+      field: "sizeOrSource",
+      headerName: "Size/Source",
+      flex: 1,
+      minWidth: 120,
+    },
+    { field: "quantity", headerName: "Quantity", flex: 1, minWidth: 100 },
+    {
+      field: "serialNumber",
+      headerName: "Serial Number",
+      flex: 1,
+      minWidth: 130,
+    },
+  ]);
 
   const navigate = useNavigate();
 
@@ -99,6 +122,50 @@ const GenerateReports = () => {
           }))
         );
         setReportData(mappedReportData);
+
+        // Dynamically update columns after generating the report
+        setColumns([
+          {
+            field: isDeliveryReport ? "deliveryNumber" : "checkoutNumber",
+            headerName: isDeliveryReport
+              ? "Delivery Number"
+              : "Checkout Number",
+            flex: 1,
+            minWidth: 150,
+          },
+          {
+            field: "deliveryDate",
+            headerName: "Date",
+            flex: 1,
+            minWidth: 140,
+          },
+          {
+            field: "itemType",
+            headerName: "Item Type",
+            flex: 1,
+            minWidth: 120,
+          },
+          {
+            field: "itemDescription",
+            headerName: "Item Description",
+            flex: 1.5,
+            minWidth: 160,
+          },
+          {
+            field: "sizeOrSource",
+            headerName: "Size/Source",
+            flex: 1,
+            minWidth: 120,
+          },
+          { field: "quantity", headerName: "Quantity", flex: 1, minWidth: 100 },
+          {
+            field: "serialNumber",
+            headerName: "Serial Number",
+            flex: 1,
+            minWidth: 130,
+          },
+        ]);
+
         setOpenDateDialog(false); // Close date picker dialog
       }
     } catch (error) {
@@ -109,68 +176,94 @@ const GenerateReports = () => {
 
   // Export to Excel function
   const exportToExcel = () => {
-    const formattedData = reportData.map(({ 
-      itemType, 
-      itemDescription, 
-      sizeOrSource, 
-      quantity, 
-      serialNumber, 
-      deliveryNumber 
-    }) => ({
-      "Item Type": itemType,
-      "Item Description": itemDescription,
-      "Size/Source": sizeOrSource,
-      "Quantity": quantity,
-      "Serial Number": serialNumber,
-      "Delivery Number": deliveryNumber || "", 
+    // Define headers dynamically based on report type
+    const headers = isDeliveryReport
+      ? [
+          [
+            "Item Type",
+            "Item Description",
+            "Size/Source",
+            "Quantity",
+            "Serial Number",
+            "Delivery Number",
+          ],
+        ]
+      : [
+          [
+            "Item Type",
+            "Item Description",
+            "Size/Source",
+            "Quantity",
+            "Serial Number",
+            "Checkout Number",
+          ],
+        ];
+
+    // Format data based on report type
+    const formattedData = reportData.map(
+      ({
+        itemType,
+        itemDescription,
+        sizeOrSource,
+        quantity,
+        serialNumber,
+        deliveryNumber,
+        checkoutNumber,
+      }) =>
+        isDeliveryReport
+          ? [
+              itemType,
+              itemDescription,
+              sizeOrSource,
+              quantity,
+              serialNumber,
+              deliveryNumber || "",
+            ]
+          : [
+              itemType,
+              itemDescription,
+              sizeOrSource,
+              quantity,
+              serialNumber,
+              checkoutNumber || "",
+            ]
+    );
+
+    // Create worksheet & add data
+    const worksheet = XLSX.utils.aoa_to_sheet([...headers, ...formattedData]);
+
+    // Define header style
+    const headerStyle = {
+      font: { bold: true, sz: 14, color: { rgb: "FFFFFF" } }, // White bold text
+      fill: { fgColor: { rgb: "4F81BD" } }, // Matte blue background
+      alignment: { horizontal: "center", vertical: "center" },
+    };
+
+    // Apply styles to headers
+    headers[0].forEach((_, colIndex) => {
+      const cellRef = XLSX.utils.encode_cell({ r: 0, c: colIndex });
+      if (worksheet[cellRef]) {
+        worksheet[cellRef].s = headerStyle;
+      }
+    });
+
+    // Set column widths dynamically based on header size
+    worksheet["!cols"] = headers[0].map((header) => ({
+      wch: header.length + 5,
     }));
-  
-    const worksheet = XLSX.utils.json_to_sheet(formattedData);
-  
-    // Adjust column order manually
+
+    // Create workbook & append styled worksheet
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
-  
-    // Generate Excel file and trigger download
-    XLSX.writeFile(workbook, "report.xlsx");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Styled Report");
+
+    // Export the Excel file
+    XLSX.writeFile(workbook, "Styled_Report.xlsx");
   };
-  
 
   useEffect(() => {
     getUserInfo();
     fetchInventoryData();
   }, []);
-
-  const columns = [
-    { field: "itemType", headerName: "Item Type", flex: 1, minWidth: 120 },
-    {
-      field: "itemDescription",
-      headerName: "Item Description",
-      flex: 1.5,
-      minWidth: 160,
-    },
-    {
-      field: "sizeOrSource",
-      headerName: "Size/Source",
-      flex: 1,
-      minWidth: 120,
-    },
-    { field: "quantity", headerName: "Quantity", flex: 1, minWidth: 100 },
-    {
-      field: "serialNumber",
-      headerName: "Serial Number",
-      flex: 1,
-      minWidth: 130,
-    },
-    {
-      field: "deliveryNumber",
-      headerName: "Delivery Number",
-      flex: 1,
-      minWidth: 100,
-      hide: !isDeliveryReport, // Hide this column if it's not a delivery report
-    },
-  ];
-  
 
   return (
     <div>
