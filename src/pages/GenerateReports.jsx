@@ -109,7 +109,6 @@ const GenerateReports = () => {
 
   // Export to Excel function
   const exportToExcel = () => {
-    // Define column headers explicitly
     const headers = [
       [
         "Item Type",
@@ -121,7 +120,6 @@ const GenerateReports = () => {
       ],
     ];
 
-    // Format data by extracting only required fields
     const formattedData = reportData.map(
       ({
         itemType,
@@ -136,19 +134,40 @@ const GenerateReports = () => {
         sizeOrSource,
         quantity,
         serialNumber,
-        deliveryNumber || "", // Ensure empty cell if missing
+        deliveryNumber || "",
       ]
     );
 
     // Merge headers and data
     const worksheet = XLSX.utils.aoa_to_sheet([...headers, ...formattedData]);
 
-    // Create workbook and append worksheet
+    // Apply styles
+    const headerStyle = {
+      font: { bold: true, sz: 14 }, // Larger, bold font for headers
+      fill: { fgColor: { rgb: "D3D3D3" } }, // Matte gray background
+      alignment: { horizontal: "center", vertical: "center" },
+    };
+
+    // Auto-adjust column widths
+    const columnWidths = headers[0].map((header) => ({
+      wch: header.length + 5,
+    }));
+
+    // Apply styles to header row
+    headers[0].forEach((_, colIndex) => {
+      const cellRef = XLSX.utils.encode_cell({ r: 0, c: colIndex }); // Get cell reference
+      worksheet[cellRef].s = headerStyle; // Apply styling
+    });
+
+    // Create workbook
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
 
-    // Export the Excel file
-    XLSX.writeFile(workbook, "report.xlsx");
+    // Set column widths
+    worksheet["!cols"] = columnWidths;
+
+    // Export file
+    XLSX.writeFile(workbook, "Styled_Report.xlsx");
   };
 
   useEffect(() => {
