@@ -90,7 +90,7 @@ const GenerateReports = () => {
             // Format the date to only include the date part (no time)
             deliveryDate: new Date(
               item.checkoutDate || item.deliveryDate
-            ).toLocaleDateString(),
+            ).toLocaleDateString("en-GB"),
             itemType: reportItem.item.itemType,
             itemDescription: reportItem.item.itemDesc,
             sizeOrSource: reportItem.item.sizeSource,
