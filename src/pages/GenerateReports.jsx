@@ -138,35 +138,32 @@ const GenerateReports = () => {
       ]
     );
 
-    // Merge headers and data
+    // Create new workbook & worksheet
+    const workbook = XLSX.utils.book_new();
     const worksheet = XLSX.utils.aoa_to_sheet([...headers, ...formattedData]);
 
-    // Apply styles
-    const headerStyle = {
-      font: { bold: true, sz: 14 }, // Larger, bold font for headers
-      fill: { fgColor: { rgb: "D3D3D3" } }, // Matte gray background
-      alignment: { horizontal: "center", vertical: "center" },
-    };
-
-    // Auto-adjust column widths
-    const columnWidths = headers[0].map((header) => ({
+    // Apply column widths based on header text length
+    worksheet["!cols"] = headers[0].map((header) => ({
       wch: header.length + 5,
     }));
 
-    // Apply styles to header row
-    headers[0].forEach((_, colIndex) => {
-      const cellRef = XLSX.utils.encode_cell({ r: 0, c: colIndex }); // Get cell reference
-      worksheet[cellRef].s = headerStyle; // Apply styling
-    });
+    // Manually style headers (workaround)
+    const range = XLSX.utils.decode_range(worksheet["!ref"]); // Get worksheet range
+    for (let C = range.s.c; C <= range.e.c; C++) {
+      const cell_address = XLSX.utils.encode_cell({ r: 0, c: C }); // Get cell reference
+      if (!worksheet[cell_address]) continue; // Skip if cell doesn't exist
 
-    // Create workbook
-    const workbook = XLSX.utils.book_new();
+      worksheet[cell_address].s = {
+        font: { bold: true, sz: 14, color: { rgb: "FFFFFF" } }, // White text, bold, larger
+        fill: { fgColor: { rgb: "4F81BD" } }, // Matte blue background
+        alignment: { horizontal: "center", vertical: "center" },
+      };
+    }
+
+    // Append worksheet to workbook
     XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
 
-    // Set column widths
-    worksheet["!cols"] = columnWidths;
-
-    // Export file
+    // Export Excel file
     XLSX.writeFile(workbook, "Styled_Report.xlsx");
   };
 
