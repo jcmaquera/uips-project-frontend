@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import axiosInstance from "../utils/axiosInstance";
+import * as XLSX from "xlsx";
 import {
   TextField,
   Button,
@@ -16,28 +17,19 @@ import {
 import { DataGrid } from "@mui/x-data-grid";
 
 const AddDelivery = () => {
-  const [serialNumber, setSerialNumber] = useState(""); // Serial number input state
-  const [quantity, setQuantity] = useState(1); // Quantity input state
-  const [items, setItems] = useState([]); // Items to be displayed in the table
-  const [successMessage, setSuccessMessage] = useState(false); // Success message for adding items
-  const [loading, setLoading] = useState(false); // Loading state
-  const [openModal, setOpenModal] = useState(false); // Modal open state
-  const [deliveryNumber, setDeliveryNumber] = useState(""); // Delivery Number input state
-  const [submissionSuccess, setSubmissionSuccess] = useState(false); // Submission success state
+  const [serialNumber, setSerialNumber] = useState("");
+  const [quantity, setQuantity] = useState(1);
+  const [items, setItems] = useState([]);
+  const [successMessage, setSuccessMessage] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
+  const [deliveryNumber, setDeliveryNumber] = useState("");
+  const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
 
-  // Column definition for DataGrid
   const columns = [
-    { field: "itemType", headerName: "Item Type", flex: 1, minWidth: 150 },
-    {
-      field: "itemDesc",
-      headerName: "Item Description",
-      flex: 2,
-      minWidth: 200,
-    },
-    { field: "sizeSource", headerName: "Size/Source", flex: 1, minWidth: 150 },
     { field: "serialNo", headerName: "Serial Number", flex: 1, minWidth: 150 },
-    { field: "quantity", headerName: "Quantity", flex: 1, minWidth: 100 }, // Add Quantity column
+    { field: "quantity", headerName: "Quantity", flex: 1, minWidth: 100 },
   ];
 
   const getUserInfo = async () => {
@@ -56,63 +48,74 @@ const AddDelivery = () => {
 
   useEffect(() => {
     getUserInfo();
-    return () => {};
   }, []);
 
-  const handleAddItem = async () => {
+  const handleAddItem = () => {
     if (!serialNumber) {
       alert("Please enter a Serial Number!");
       return;
     }
-
     if (quantity <= 0) {
       alert("Quantity must be greater than 0!");
       return;
     }
 
-    setLoading(true);
-    try {
-      const response = await axiosInstance.post("/get-item-by-serial", {
-        serialNo: serialNumber,
-      });
+    const existingItemIndex = items.findIndex(
+      (item) => item.serialNo === serialNumber
+    );
 
-      if (response.data && response.data.item) {
-        const newItem = {
-          ...response.data.item,
-          id: response.data.item._id, // This is the _id from the Item document
-          quantity: quantity,
-        };
-
-        const existingItemIndex = items.findIndex(
-          (item) => item.serialNo === serialNumber
-        );
-
-        if (existingItemIndex !== -1) {
-          // Update the quantity if the item already exists
-          const updatedItems = [...items];
-          updatedItems[existingItemIndex] = {
-            ...updatedItems[existingItemIndex],
-            quantity: updatedItems[existingItemIndex].quantity + quantity,
-          };
-          setItems(updatedItems);
-        } else {
-          // Add the new item to the list
-          setItems([...items, newItem]);
-        }
-
-        setSuccessMessage(true);
-        setTimeout(() => setSuccessMessage(false), 3000);
-      } else {
-        alert("Item not found.");
-      }
-    } catch (error) {
-      console.error("Error fetching item:", error);
-      alert("Error fetching item. Please try again.");
-    } finally {
-      setLoading(false);
-      setSerialNumber("");
-      setQuantity(1);
+    if (existingItemIndex !== -1) {
+      const updatedItems = [...items];
+      updatedItems[existingItemIndex].quantity += quantity;
+      setItems(updatedItems);
+    } else {
+      setItems([...items, { serialNo: serialNumber, quantity }]);
     }
+
+    setSerialNumber("");
+    setQuantity(1);
+    setSuccessMessage(true);
+    setTimeout(() => setSuccessMessage(false), 3000);
+  };
+
+  const handleExcelUpload = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json(sheet);
+
+      const extractedData = jsonData.map((row) => ({
+        serialNo: row["Serial Number"],
+        quantity: row["Quantity"] || 1,
+      }));
+
+      addExcelItems(extractedData);
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  const addExcelItems = (data) => {
+    const updatedItems = [...items];
+
+    data.forEach(({ serialNo, quantity }) => {
+      const existingItemIndex = updatedItems.findIndex(
+        (item) => item.serialNo === serialNo
+      );
+
+      if (existingItemIndex !== -1) {
+        updatedItems[existingItemIndex].quantity += quantity;
+      } else {
+        updatedItems.push({ serialNo, quantity });
+      }
+    });
+
+    setItems(updatedItems);
   };
 
   const handleAddDelivery = () => {
@@ -121,51 +124,31 @@ const AddDelivery = () => {
       return;
     }
 
-    // Prepare the items for delivery submission by ensuring each item has the correct item._id
     const formattedItems = items.map((item) => ({
-      item: item._id, // Use _id from the item object
+      serialNo: item.serialNo,
       quantity: item.quantity,
     }));
 
-    // Log the formatted items
-    console.log("Formatted Items before submitting delivery:", formattedItems);
-
-    // Log the delivery number for debugging
-    console.log("Delivery Number:", deliveryNumber);
-
-    // Now submit the data to the backend (you can replace this with your actual API call)
-    // Example of how you might send the data:
     setLoading(true);
     axiosInstance
       .post("/add-delivery", {
-        deliveryNumber: deliveryNumber,
+        deliveryNumber,
         deliveryDate: new Date(),
         items: formattedItems,
       })
-      .then((response) => {
-        console.log("Delivery submitted successfully:", response.data);
+      .then(() => {
         setSubmissionSuccess(true);
-        setTimeout(() => setSubmissionSuccess(false), 3000); // Hide success message after 3 seconds
-
-        // Reset the form fields and table
+        setTimeout(() => setSubmissionSuccess(false), 3000);
         setSerialNumber("");
         setQuantity(1);
         setItems([]);
         setDeliveryNumber("");
       })
-      .catch((error) => {
-        console.error("Error submitting delivery:", error);
-      })
+      .catch((error) => console.error("Error submitting delivery:", error))
       .finally(() => {
         setLoading(false);
-        setOpenModal(false); // Close the modal
+        setOpenModal(false);
       });
-  };
-
-  const handleKeyDown = (event) => {
-    if (event.key === "Enter") {
-      handleAddItem();
-    }
   };
 
   return (
@@ -185,17 +168,12 @@ const AddDelivery = () => {
       )}
 
       <div style={{ padding: "30px" }}>
-        <Grid
-          container
-          justifyContent="center"
-          style={{ marginBottom: "20px" }}
-        >
+        <Grid container justifyContent="center" spacing={2}>
           <Grid item xs={3}>
             <TextField
               label="Serial Number"
               value={serialNumber}
               onChange={(e) => setSerialNumber(e.target.value)}
-              onKeyDown={handleKeyDown}
               fullWidth
             />
           </Grid>
@@ -206,7 +184,6 @@ const AddDelivery = () => {
               value={quantity}
               onChange={(e) => setQuantity(Math.max(1, e.target.value))}
               fullWidth
-              onKeyDown={handleKeyDown}
             />
           </Grid>
           <Grid item xs={2}>
@@ -214,25 +191,31 @@ const AddDelivery = () => {
               variant="contained"
               color="primary"
               onClick={handleAddItem}
-              style={{ height: "100%" }}
               disabled={loading}
             >
               {loading ? "Loading..." : "Add Item"}
             </Button>
           </Grid>
+          <Grid item xs={3}>
+            <input
+              type="file"
+              accept=".xlsx, .xls"
+              onChange={handleExcelUpload}
+              style={{ marginTop: "10px" }}
+            />
+          </Grid>
         </Grid>
 
-        <Box sx={{ height: 400, width: "100%" }}>
+        <Box sx={{ height: 400, width: "100%", marginTop: 3 }}>
           <DataGrid
             rows={items}
             columns={columns}
             pageSize={5}
             disableSelectionOnClick
-            getRowId={(row) => row.id}
+            getRowId={(row) => row.serialNo}
           />
         </Box>
 
-        {/* Add Delivery Button */}
         <Grid container justifyContent="center" style={{ marginTop: "30px" }}>
           <Grid item>
             <Button
@@ -246,7 +229,6 @@ const AddDelivery = () => {
         </Grid>
       </div>
 
-      {/* Modal for Delivery Confirmation */}
       <Dialog
         open={openModal}
         onClose={() => setOpenModal(false)}
@@ -255,8 +237,8 @@ const AddDelivery = () => {
       >
         <DialogTitle>Confirm Delivery</DialogTitle>
         <DialogContent>
-          <Typography variant="h6" gutterBottom>
-            Please provide the delivery number and confirm the items.
+          <Typography variant="h6">
+            Please enter the delivery number.
           </Typography>
           <TextField
             label="Delivery Number"
@@ -269,8 +251,7 @@ const AddDelivery = () => {
           <ul>
             {items.map((item, index) => (
               <li key={index}>
-                <strong>{item.itemType}</strong> - {item.itemDesc} -{" "}
-                {item.sizeSource} - {item.serialNo} - {item.quantity} pcs
+                Serial No: {item.serialNo} - Quantity: {item.quantity}
               </li>
             ))}
           </ul>
