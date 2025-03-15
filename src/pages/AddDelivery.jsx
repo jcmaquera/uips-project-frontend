@@ -170,9 +170,13 @@ const AddDelivery = () => {
           const ws = wb.Sheets[sheetName];
           const parsedData = XLSX.utils.sheet_to_json(ws);
 
+          console.log("Parsed Data: ", parsedData); // Log the parsed data to inspect
+
           if (parsedData.length > 0) {
             for (let i = 0; i < parsedData.length; i++) {
-              const { serialNo, quantity } = parsedData[i];
+              const row = parsedData[i];
+              const serialNo = row.serialNo; // Ensure the column name matches
+              const quantity = row.quantity; // Ensure the column name matches
 
               if (!serialNo || !quantity) {
                 alert(`Missing serial number or quantity in row ${i + 1}`);
@@ -190,7 +194,7 @@ const AddDelivery = () => {
               ) {
                 const newItem = {
                   ...response.data.item,
-                  id: response.data.item._id,
+                  serialNo: serialNo, // Use serialNo as the unique identifier
                   quantity: quantity,
                 };
 
@@ -198,7 +202,11 @@ const AddDelivery = () => {
                   (item) => item.serialNo === serialNo
                 );
 
-                if (existingItemIndex !== -1) {
+                if (existingItemIndex === -1) {
+                  // If the item doesn't exist, add it to the table
+                  setItems((prevItems) => [...prevItems, newItem]);
+                } else {
+                  // If the item exists, update the quantity
                   const updatedItems = [...items];
                   updatedItems[existingItemIndex] = {
                     ...updatedItems[existingItemIndex],
@@ -206,8 +214,6 @@ const AddDelivery = () => {
                       updatedItems[existingItemIndex].quantity + quantity,
                   };
                   setItems(updatedItems);
-                } else {
-                  setItems([...items, newItem]);
                 }
               } else {
                 alert(`Item not found for serial number: ${serialNo}`);
