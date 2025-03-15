@@ -109,13 +109,32 @@ const GenerateReports = () => {
 
   // Export to Excel function
   const exportToExcel = () => {
-    const worksheet = XLSX.utils.json_to_sheet(reportData); // Convert the report data to a worksheet
-    const workbook = XLSX.utils.book_new(); // Create a new workbook
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Report"); // Append the worksheet to the workbook
-
+    const formattedData = reportData.map(({ 
+      itemType, 
+      itemDescription, 
+      sizeOrSource, 
+      quantity, 
+      serialNumber, 
+      deliveryNumber 
+    }) => ({
+      "Item Type": itemType,
+      "Item Description": itemDescription,
+      "Size/Source": sizeOrSource,
+      "Quantity": quantity,
+      "Serial Number": serialNumber,
+      "Delivery Number": deliveryNumber || "", 
+    }));
+  
+    const worksheet = XLSX.utils.json_to_sheet(formattedData);
+  
+    // Adjust column order manually
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
+  
     // Generate Excel file and trigger download
     XLSX.writeFile(workbook, "report.xlsx");
   };
+  
 
   useEffect(() => {
     getUserInfo();
