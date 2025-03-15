@@ -320,17 +320,22 @@ const GenerateReports = () => {
                 type="date"
                 label="Start Date"
                 fullWidth
-                value={startDate}
+                value={
+                  startDate
+                    ? new Date(startDate).toISOString().split("T")[0]
+                    : ""
+                } // Format date as YYYY-MM-DD for the date picker
                 onChange={(e) => setStartDate(e.target.value)}
                 InputLabelProps={{ shrink: true }}
               />
-            </Grid>
-            <Grid item xs={12} sm={6}>
+
               <TextField
                 type="date"
                 label="End Date"
                 fullWidth
-                value={endDate}
+                value={
+                  endDate ? new Date(endDate).toISOString().split("T")[0] : ""
+                } // Format date as YYYY-MM-DD for the date picker
                 onChange={(e) => setEndDate(e.target.value)}
                 InputLabelProps={{ shrink: true }}
               />
