@@ -290,11 +290,14 @@ const AddDelivery = () => {
 
         <Box sx={{ height: 400, width: "100%" }}>
           <DataGrid
-            rows={items}
+            rows={items.map((item, index) => ({
+              ...item,
+              id: item.serialNo || index,
+            }))} // Ensure a unique ID
             columns={columns}
             pageSize={5}
             disableSelectionOnClick
-            getRowId={(row) => row.id}
+            getRowId={(row) => row.id} // Use the custom id field
           />
         </Box>
 
