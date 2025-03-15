@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import * as XLSX from "xlsx";
 import Navbar from "../components/Navbar";
 import axiosInstance from "../utils/axiosInstance";
 import {
@@ -12,21 +13,21 @@ import {
   DialogContent,
   DialogTitle,
   Typography,
+  Input,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 
 const AddDelivery = () => {
-  const [serialNumber, setSerialNumber] = useState(""); // Serial number input state
-  const [quantity, setQuantity] = useState(1); // Quantity input state
-  const [items, setItems] = useState([]); // Items to be displayed in the table
-  const [successMessage, setSuccessMessage] = useState(false); // Success message for adding items
-  const [loading, setLoading] = useState(false); // Loading state
-  const [openModal, setOpenModal] = useState(false); // Modal open state
-  const [deliveryNumber, setDeliveryNumber] = useState(""); // Delivery Number input state
-  const [submissionSuccess, setSubmissionSuccess] = useState(false); // Submission success state
+  const [serialNumber, setSerialNumber] = useState("");
+  const [quantity, setQuantity] = useState(1);
+  const [items, setItems] = useState([]);
+  const [successMessage, setSuccessMessage] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
+  const [deliveryNumber, setDeliveryNumber] = useState("");
+  const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
 
-  // Column definition for DataGrid
   const columns = [
     { field: "itemType", headerName: "Item Type", flex: 1, minWidth: 150 },
     {
@@ -37,27 +38,62 @@ const AddDelivery = () => {
     },
     { field: "sizeSource", headerName: "Size/Source", flex: 1, minWidth: 150 },
     { field: "serialNo", headerName: "Serial Number", flex: 1, minWidth: 150 },
-    { field: "quantity", headerName: "Quantity", flex: 1, minWidth: 100 }, // Add Quantity column
+    { field: "quantity", headerName: "Quantity", flex: 1, minWidth: 100 },
   ];
 
-  const getUserInfo = async () => {
-    try {
-      const response = await axiosInstance.get("/get-user");
-      if (response.data && response.data.user) {
-        setUserInfo(response.data.user);
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const parsedData = XLSX.utils.sheet_to_json(sheet);
+
+      const excelItems = parsedData.map((row) => ({
+        serialNo: row["Serial Number"],
+        quantity: row["Quantity"],
+      }));
+
+      for (const excelItem of excelItems) {
+        await handleAddItemFromExcel(excelItem.serialNo, excelItem.quantity);
       }
-    } catch (error) {
-      if (error.response.status === 401) {
-        localStorage.clear();
-        navigate("/login");
-      }
-    }
+    };
+    reader.readAsArrayBuffer(file);
   };
 
-  useEffect(() => {
-    getUserInfo();
-    return () => {};
-  }, []);
+  const handleAddItemFromExcel = async (serialNo, quantity) => {
+    try {
+      const response = await axiosInstance.post("/get-item-by-serial", {
+        serialNo,
+      });
+      if (response.data && response.data.item) {
+        const newItem = {
+          ...response.data.item,
+          id: response.data.item._id,
+          quantity: quantity,
+        };
+
+        setItems((prevItems) => {
+          const existingItemIndex = prevItems.findIndex(
+            (item) => item.serialNo === serialNo
+          );
+          if (existingItemIndex !== -1) {
+            const updatedItems = [...prevItems];
+            updatedItems[existingItemIndex].quantity += quantity;
+            return updatedItems;
+          } else {
+            return [...prevItems, newItem];
+          }
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching item:", error);
+    }
+  };
 
   const handleAddItem = async () => {
     if (!serialNumber) {
@@ -79,27 +115,11 @@ const AddDelivery = () => {
       if (response.data && response.data.item) {
         const newItem = {
           ...response.data.item,
-          id: response.data.item._id, // This is the _id from the Item document
+          id: response.data.item._id,
           quantity: quantity,
         };
 
-        const existingItemIndex = items.findIndex(
-          (item) => item.serialNo === serialNumber
-        );
-
-        if (existingItemIndex !== -1) {
-          // Update the quantity if the item already exists
-          const updatedItems = [...items];
-          updatedItems[existingItemIndex] = {
-            ...updatedItems[existingItemIndex],
-            quantity: updatedItems[existingItemIndex].quantity + quantity,
-          };
-          setItems(updatedItems);
-        } else {
-          // Add the new item to the list
-          setItems([...items, newItem]);
-        }
-
+        setItems([...items, newItem]);
         setSuccessMessage(true);
         setTimeout(() => setSuccessMessage(false), 3000);
       } else {
@@ -115,87 +135,23 @@ const AddDelivery = () => {
     }
   };
 
-  const handleAddDelivery = () => {
-    if (!deliveryNumber) {
-      alert("Please enter a Delivery Number!");
-      return;
-    }
-
-    // Prepare the items for delivery submission by ensuring each item has the correct item._id
-    const formattedItems = items.map((item) => ({
-      item: item._id, // Use _id from the item object
-      quantity: item.quantity,
-    }));
-
-    // Log the formatted items
-    console.log("Formatted Items before submitting delivery:", formattedItems);
-
-    // Log the delivery number for debugging
-    console.log("Delivery Number:", deliveryNumber);
-
-    // Now submit the data to the backend (you can replace this with your actual API call)
-    // Example of how you might send the data:
-    setLoading(true);
-    axiosInstance
-      .post("/add-delivery", {
-        deliveryNumber: deliveryNumber,
-        deliveryDate: new Date(),
-        items: formattedItems,
-      })
-      .then((response) => {
-        console.log("Delivery submitted successfully:", response.data);
-        setSubmissionSuccess(true);
-        setTimeout(() => setSubmissionSuccess(false), 3000); // Hide success message after 3 seconds
-
-        // Reset the form fields and table
-        setSerialNumber("");
-        setQuantity(1);
-        setItems([]);
-        setDeliveryNumber("");
-      })
-      .catch((error) => {
-        console.error("Error submitting delivery:", error);
-      })
-      .finally(() => {
-        setLoading(false);
-        setOpenModal(false); // Close the modal
-      });
-  };
-
-  const handleKeyDown = (event) => {
-    if (event.key === "Enter") {
-      handleAddItem();
-    }
-  };
-
   return (
     <>
       <Navbar userInfo={userInfo} />
-
-      {successMessage && (
-        <Alert severity="success" sx={{ marginBottom: "20px" }}>
-          Item successfully added to the list!
-        </Alert>
-      )}
-
-      {submissionSuccess && (
-        <Alert severity="success" sx={{ marginBottom: "20px" }}>
-          Delivery submitted successfully!
-        </Alert>
-      )}
-
       <div style={{ padding: "30px" }}>
         <Grid
           container
           justifyContent="center"
           style={{ marginBottom: "20px" }}
         >
+          <Input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} />
+        </Grid>
+        <Grid container justifyContent="center" spacing={2}>
           <Grid item xs={3}>
             <TextField
               label="Serial Number"
               value={serialNumber}
               onChange={(e) => setSerialNumber(e.target.value)}
-              onKeyDown={handleKeyDown}
               fullWidth
             />
           </Grid>
@@ -206,7 +162,6 @@ const AddDelivery = () => {
               value={quantity}
               onChange={(e) => setQuantity(Math.max(1, e.target.value))}
               fullWidth
-              onKeyDown={handleKeyDown}
             />
           </Grid>
           <Grid item xs={2}>
@@ -214,14 +169,12 @@ const AddDelivery = () => {
               variant="contained"
               color="primary"
               onClick={handleAddItem}
-              style={{ height: "100%" }}
               disabled={loading}
             >
               {loading ? "Loading..." : "Add Item"}
             </Button>
           </Grid>
         </Grid>
-
         <Box sx={{ height: 400, width: "100%" }}>
           <DataGrid
             rows={items}
@@ -231,8 +184,6 @@ const AddDelivery = () => {
             getRowId={(row) => row.id}
           />
         </Box>
-
-        {/* Add Delivery Button */}
         <Grid container justifyContent="center" style={{ marginTop: "30px" }}>
           <Grid item>
             <Button
@@ -245,43 +196,6 @@ const AddDelivery = () => {
           </Grid>
         </Grid>
       </div>
-
-      {/* Modal for Delivery Confirmation */}
-      <Dialog
-        open={openModal}
-        onClose={() => setOpenModal(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>Confirm Delivery</DialogTitle>
-        <DialogContent>
-          <Typography variant="h6" gutterBottom>
-            Please provide the delivery number and confirm the items.
-          </Typography>
-          <TextField
-            label="Delivery Number"
-            fullWidth
-            value={deliveryNumber}
-            onChange={(e) => setDeliveryNumber(e.target.value)}
-            style={{ marginBottom: "20px" }}
-          />
-          <Typography variant="body1">Items in this delivery:</Typography>
-          <ul>
-            {items.map((item, index) => (
-              <li key={index}>
-                <strong>{item.itemType}</strong> - {item.itemDesc} -{" "}
-                {item.sizeSource} - {item.serialNo} - {item.quantity} pcs
-              </li>
-            ))}
-          </ul>
-        </DialogContent>
-        <DialogActions>
-          <Button color="primary" onClick={handleAddDelivery}>
-            {loading ? "Submitting..." : "Submit Delivery"}
-          </Button>
-          <Button onClick={() => setOpenModal(false)}>Cancel</Button>
-        </DialogActions>
-      </Dialog>
     </>
   );
 };
