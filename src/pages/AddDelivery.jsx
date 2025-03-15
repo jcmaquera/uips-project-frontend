@@ -14,7 +14,6 @@ import {
   Typography,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
-import * as XLSX from "xlsx"; // Import xlsx library
 
 const AddDelivery = () => {
   const [serialNumber, setSerialNumber] = useState(""); // Serial number input state
@@ -135,6 +134,7 @@ const AddDelivery = () => {
     console.log("Delivery Number:", deliveryNumber);
 
     // Now submit the data to the backend (you can replace this with your actual API call)
+    // Example of how you might send the data:
     setLoading(true);
     axiosInstance
       .post("/add-delivery", {
@@ -165,68 +165,6 @@ const AddDelivery = () => {
   const handleKeyDown = (event) => {
     if (event.key === "Enter") {
       handleAddItem();
-    }
-  };
-
-  // Function to handle file upload and parsing
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const data = new Uint8Array(event.target.result);
-        const workbook = XLSX.read(data, { type: "array" });
-
-        // Assuming the first sheet contains the data
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const sheetData = XLSX.utils.sheet_to_json(sheet);
-
-        // Clear existing items to avoid duplication
-        const newItems = [...items];
-
-        // Process the data from the sheet
-        sheetData.forEach(async (row) => {
-          const { serialNo, quantity } = row;
-
-          if (serialNo && quantity > 0) {
-            try {
-              const response = await axiosInstance.post("/get-item-by-serial", {
-                serialNo: serialNo,
-              });
-
-              if (response.data && response.data.item) {
-                const newItem = {
-                  ...response.data.item,
-                  id: response.data.item._id, // This is the _id from the Item document
-                  quantity: quantity,
-                };
-
-                const existingItemIndex = newItems.findIndex(
-                  (item) => item.serialNo === serialNo
-                );
-
-                if (existingItemIndex !== -1) {
-                  // Update the quantity if the item already exists
-                  newItems[existingItemIndex] = {
-                    ...newItems[existingItemIndex],
-                    quantity: newItems[existingItemIndex].quantity + quantity,
-                  };
-                } else {
-                  // Add the new item to the list
-                  newItems.push(newItem);
-                }
-
-                setItems([...newItems]); // Update the state with new items
-              } else {
-                alert(`Item not found for serial number: ${serialNo}`);
-              }
-            } catch (error) {
-              console.error("Error fetching item:", error);
-            }
-          }
-        });
-      };
-      reader.readAsArrayBuffer(file);
     }
   };
 
@@ -284,50 +222,66 @@ const AddDelivery = () => {
           </Grid>
         </Grid>
 
-        {/* Excel File Upload */}
-        <Grid
-          container
-          justifyContent="center"
-          style={{ marginBottom: "20px" }}
-        >
-          <Grid item xs={3}>
-            <input
-              type="file"
-              accept=".xlsx, .xls"
-              onChange={handleFileUpload}
-              style={{ width: "100%" }}
-            />
-          </Grid>
-        </Grid>
-
-        {/* DataGrid to display added items */}
-        <div style={{ height: 400, width: "100%" }}>
+        <Box sx={{ height: 400, width: "100%" }}>
           <DataGrid
             rows={items}
             columns={columns}
             pageSize={5}
-            rowsPerPageOptions={[5]}
-            checkboxSelection
+            disableSelectionOnClick
+            getRowId={(row) => row.id}
           />
-        </div>
+        </Box>
 
-        {/* Delivery Modal */}
-        <Dialog open={openModal} onClose={() => setOpenModal(false)}>
-          <DialogTitle>Submit Delivery</DialogTitle>
-          <DialogContent>
-            <Typography variant="body1">Enter Delivery Number:</Typography>
-            <TextField
-              value={deliveryNumber}
-              onChange={(e) => setDeliveryNumber(e.target.value)}
-              fullWidth
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setOpenModal(false)}>Cancel</Button>
-            <Button onClick={handleAddDelivery}>Submit</Button>
-          </DialogActions>
-        </Dialog>
+        {/* Add Delivery Button */}
+        <Grid container justifyContent="center" style={{ marginTop: "30px" }}>
+          <Grid item>
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={() => setOpenModal(true)}
+            >
+              Add Delivery
+            </Button>
+          </Grid>
+        </Grid>
       </div>
+
+      {/* Modal for Delivery Confirmation */}
+      <Dialog
+        open={openModal}
+        onClose={() => setOpenModal(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Confirm Delivery</DialogTitle>
+        <DialogContent>
+          <Typography variant="h6" gutterBottom>
+            Please provide the delivery number and confirm the items.
+          </Typography>
+          <TextField
+            label="Delivery Number"
+            fullWidth
+            value={deliveryNumber}
+            onChange={(e) => setDeliveryNumber(e.target.value)}
+            style={{ marginBottom: "20px" }}
+          />
+          <Typography variant="body1">Items in this delivery:</Typography>
+          <ul>
+            {items.map((item, index) => (
+              <li key={index}>
+                <strong>{item.itemType}</strong> - {item.itemDesc} -{" "}
+                {item.sizeSource} - {item.serialNo} - {item.quantity} pcs
+              </li>
+            ))}
+          </ul>
+        </DialogContent>
+        <DialogActions>
+          <Button color="primary" onClick={handleAddDelivery}>
+            {loading ? "Submitting..." : "Submit Delivery"}
+          </Button>
+          <Button onClick={() => setOpenModal(false)}>Cancel</Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };
