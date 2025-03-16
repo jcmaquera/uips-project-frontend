@@ -178,8 +178,14 @@ const AddDelivery = () => {
               const serialNo = row.serialNo; // Ensure the column name matches
               const quantity = row.quantity; // Ensure the column name matches
 
-              if (!serialNo || !quantity) {
-                alert(`Missing serial number or quantity in row ${i + 1}`);
+              if (serialNo === undefined || serialNo === "") {
+                alert(`Missing serial number in row ${i + 1}`);
+                continue;
+              }
+
+              // No alert for quantity being 0, just handle it correctly
+              if (quantity === undefined || quantity === "") {
+                alert(`Missing quantity in row ${i + 1}`);
                 continue;
               }
 
@@ -195,7 +201,7 @@ const AddDelivery = () => {
                 const newItem = {
                   ...response.data.item,
                   serialNo: serialNo, // Use serialNo as the unique identifier
-                  quantity: quantity,
+                  quantity: quantity, // Allow 0 quantity here
                 };
 
                 const existingItemIndex = items.findIndex(
