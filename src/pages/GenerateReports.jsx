@@ -175,11 +175,13 @@ const GenerateReports = () => {
   };
 
   // Export to Excel function
+  // Export to Excel function
   const exportToExcel = () => {
     // Define headers dynamically based on report type
     const headers = isDeliveryReport
       ? [
           [
+            "Date",
             "Item Type",
             "Item Description",
             "Size/Source",
@@ -190,6 +192,7 @@ const GenerateReports = () => {
         ]
       : [
           [
+            "Date",
             "Item Type",
             "Item Description",
             "Size/Source",
@@ -202,6 +205,7 @@ const GenerateReports = () => {
     // Format data based on report type
     const formattedData = reportData.map(
       ({
+        deliveryDate, // Ensure the date is formatted
         itemType,
         itemDescription,
         sizeOrSource,
@@ -212,6 +216,7 @@ const GenerateReports = () => {
       }) =>
         isDeliveryReport
           ? [
+              new Date(deliveryDate).toLocaleDateString("en-GB"), // Convert date
               itemType,
               itemDescription,
               sizeOrSource,
@@ -220,6 +225,7 @@ const GenerateReports = () => {
               deliveryNumber || "",
             ]
           : [
+              new Date(deliveryDate).toLocaleDateString("en-GB"), // Convert date
               itemType,
               itemDescription,
               sizeOrSource,
