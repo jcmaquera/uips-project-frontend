@@ -214,13 +214,14 @@ const GenerateReports = () => {
         deliveryNumber,
         checkoutNumber,
       }) => {
-        const parsedDate = new Date(deliveryDate);
+        // Convert date to British format string (DD/MM/YYYY)
+        const formattedDate = new Date(deliveryDate).toLocaleDateString(
+          "en-GB"
+        ); // en-GB ensures correct format
 
         return isDeliveryReport
           ? [
-              parsedDate instanceof Date && !isNaN(parsedDate)
-                ? parsedDate
-                : "", // Keep Date object for Excel
+              formattedDate, // Store date as string
               itemType,
               itemDescription,
               sizeOrSource,
@@ -229,9 +230,7 @@ const GenerateReports = () => {
               deliveryNumber || "",
             ]
           : [
-              parsedDate instanceof Date && !isNaN(parsedDate)
-                ? parsedDate
-                : "", // Keep Date object for Excel
+              formattedDate, // Store date as string
               itemType,
               itemDescription,
               sizeOrSource,
@@ -244,15 +243,6 @@ const GenerateReports = () => {
 
     // Create worksheet & add data
     const worksheet = XLSX.utils.aoa_to_sheet([...headers, ...formattedData]);
-
-    // Apply British date format to the first column
-    formattedData.forEach((_, rowIndex) => {
-      const cellRef = XLSX.utils.encode_cell({ r: rowIndex + 1, c: 0 }); // Date column (A)
-      if (worksheet[cellRef]) {
-        worksheet[cellRef].t = "d"; // Set cell type as Date
-        worksheet[cellRef].z = "dd/mm/yyyy"; // Set British format
-      }
-    });
 
     // Define header style
     const headerStyle = {
