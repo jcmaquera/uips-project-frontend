@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
+import { useNavigate } from "react-router-dom";
 import axiosInstance from "../utils/axiosInstance";
 import {
   TextField,
@@ -25,6 +26,8 @@ const Checkout = () => {
   const [checkoutNumber, setCheckoutNumber] = useState(""); // Checkout Number input state
   const [submissionSuccess, setSubmissionSuccess] = useState(false); // Submission success state
   const [userInfo, setUserInfo] = useState(null);
+
+  const navigate = useNavigate();
 
   // Column definition for DataGrid
   const columns = [
