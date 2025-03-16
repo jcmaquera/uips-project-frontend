@@ -214,14 +214,18 @@ const GenerateReports = () => {
         deliveryNumber,
         checkoutNumber,
       }) => {
-        // Convert date to British format string (DD/MM/YYYY)
-        const formattedDate = new Date(deliveryDate).toLocaleDateString(
-          "en-GB"
-        ); // en-GB ensures correct format
+        // Convert date to British format (DD/MM/YYYY)
+        let formattedDate = "Invalid Date";
+        if (deliveryDate) {
+          const parsedDate = new Date(deliveryDate);
+          if (!isNaN(parsedDate)) {
+            formattedDate = parsedDate.toLocaleDateString("en-GB"); // Ensures DD/MM/YYYY format
+          }
+        }
 
         return isDeliveryReport
           ? [
-              formattedDate, // Store date as string
+              formattedDate, // Store as plain text
               itemType,
               itemDescription,
               sizeOrSource,
@@ -230,7 +234,7 @@ const GenerateReports = () => {
               deliveryNumber || "",
             ]
           : [
-              formattedDate, // Store date as string
+              formattedDate, // Store as plain text
               itemType,
               itemDescription,
               sizeOrSource,
@@ -263,6 +267,14 @@ const GenerateReports = () => {
     worksheet["!cols"] = headers[0].map((header) => ({
       wch: header.length + 5,
     }));
+
+    // **Force Excel to treat the date as text to prevent formatting issues**
+    formattedData.forEach((row, rowIndex) => {
+      const cellRef = XLSX.utils.encode_cell({ r: rowIndex + 1, c: 0 }); // Date column (first column)
+      if (worksheet[cellRef]) {
+        worksheet[cellRef].z = "@"; // Forces Excel to treat it as text
+      }
+    });
 
     // Create workbook & append styled worksheet
     const workbook = XLSX.utils.book_new();
