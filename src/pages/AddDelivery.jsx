@@ -135,7 +135,7 @@ const AddDelivery = () => {
           items: formattedItems,
         },
         {
-          timeout: 300000, // 5 minutes (300,000ms)
+          timeout: 600000, // 5 minutes (300,000ms)
         }
       )
       .then((response) => {
