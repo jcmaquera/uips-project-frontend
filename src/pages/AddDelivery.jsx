@@ -127,19 +127,20 @@ const AddDelivery = () => {
 
     setLoading(true);
     axiosInstance
-      .post("/add-delivery", {
-        deliveryNumber: deliveryNumber,
-        deliveryDate: new Date(),
-        items: formattedItems,
-      })
+      .post(
+        "/add-delivery",
+        {
+          deliveryNumber: deliveryNumber,
+          deliveryDate: new Date(),
+          items: formattedItems,
+        },
+        {
+          timeout: 300000, // 5 minutes (300,000ms)
+        }
+      )
       .then((response) => {
         setSubmissionSuccess(true);
         setTimeout(() => setSubmissionSuccess(false), 3000); // Hide success message after 3 seconds
-
-        setSerialNumber("");
-        setQuantity(1);
-        setItems([]);
-        setDeliveryNumber("");
       })
       .catch((error) => {
         console.error("Error submitting delivery:", error);
