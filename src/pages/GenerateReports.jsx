@@ -206,7 +206,7 @@ const GenerateReports = () => {
     const formatDateBritish = (dateString) => {
       if (!dateString) return ""; // Return empty string if no date is provided
       const date = new Date(dateString);
-      if (isNaN(date)) return "Invalid Date"; // Handle invalid date cases
+      // if (isNaN(date)) return "Invalid Date"; // Handle invalid date cases
 
       // Extract day, month, and year
       const day = String(date.getDate()).padStart(2, "0");
