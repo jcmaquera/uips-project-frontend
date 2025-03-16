@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
-import { useNavigate } from "react-router-dom";
 import axiosInstance from "../utils/axiosInstance";
 import {
   TextField,
@@ -15,6 +14,7 @@ import {
   Typography,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
+import { useNavigate } from "react-router-dom"; // Import navigate
 
 const Checkout = () => {
   const [serialNumber, setSerialNumber] = useState(""); // Serial number input state
@@ -26,8 +26,7 @@ const Checkout = () => {
   const [checkoutNumber, setCheckoutNumber] = useState(""); // Checkout Number input state
   const [submissionSuccess, setSubmissionSuccess] = useState(false); // Submission success state
   const [userInfo, setUserInfo] = useState(null);
-
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // Initialize navigate
 
   // Column definition for DataGrid
   const columns = [
@@ -50,16 +49,16 @@ const Checkout = () => {
         setUserInfo(response.data.user);
       }
     } catch (error) {
-      if (error.response.status === 401) {
+      if (error.response?.status === 401) {
         localStorage.clear();
         navigate("/login");
       }
+      console.error("Error fetching user info:", error);
     }
   };
 
   useEffect(() => {
     getUserInfo();
-    return () => {};
   }, []);
 
   const handleAddItem = async () => {
@@ -126,7 +125,7 @@ const Checkout = () => {
 
     // Prepare the items for checkout submission
     const formattedItems = items.map((item) => ({
-      item: item._id, // Use _id from the item object
+      item: item._id, // Ensure this is the correct field on the backend
       quantity: item.quantity,
     }));
 
@@ -156,7 +155,11 @@ const Checkout = () => {
         setCheckoutNumber("");
       })
       .catch((error) => {
-        console.error("Error submitting checkout:", error);
+        console.error(
+          "Error submitting checkout:",
+          error.response?.data || error.message
+        );
+        alert("There was an issue submitting the checkout. Please try again.");
       })
       .finally(() => {
         setLoading(false);
@@ -172,7 +175,7 @@ const Checkout = () => {
 
   return (
     <>
-      <Navbar userInfo={userInfo}/>
+      <Navbar userInfo={userInfo} />
 
       {successMessage && (
         <Alert severity="success" sx={{ marginBottom: "20px" }}>
@@ -206,7 +209,9 @@ const Checkout = () => {
               label="Quantity"
               type="number"
               value={quantity}
-              onChange={(e) => setQuantity(Math.max(1, e.target.value))}
+              onChange={(e) =>
+                setQuantity(Math.max(1, parseInt(e.target.value)))
+              }
               fullWidth
               onKeyDown={handleKeyDown}
             />
