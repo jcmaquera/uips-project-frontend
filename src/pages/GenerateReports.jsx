@@ -202,13 +202,17 @@ const GenerateReports = () => {
           ],
         ];
 
-    // Helper function to format date as DD/MM/YYYY
+    // Helper function to format date as DD/MM/YYYY (British format)
     const formatDateBritish = (dateString) => {
+      if (!dateString) return ""; // Return empty string if no date is provided
       const date = new Date(dateString);
-      if (isNaN(date)) return "Invalid Date";
-      const day = String(date.getDate()).padStart(2, "0"); // Ensure 2-digit day
-      const month = String(date.getMonth() + 1).padStart(2, "0"); // Ensure 2-digit month (months are 0-based)
+      if (isNaN(date)) return "Invalid Date"; // Handle invalid date cases
+
+      // Extract day, month, and year
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are zero-based
       const year = date.getFullYear();
+
       return `${day}/${month}/${year}`; // British format (DD/MM/YYYY)
     };
 
@@ -228,7 +232,7 @@ const GenerateReports = () => {
 
         return isDeliveryReport
           ? [
-              formattedDate, // Store as plain text
+              `'${formattedDate}`, // Store as text in Excel by prefixing with `'`
               itemType,
               itemDescription,
               sizeOrSource,
@@ -237,7 +241,7 @@ const GenerateReports = () => {
               deliveryNumber || "",
             ]
           : [
-              formattedDate, // Store as plain text
+              `'${formattedDate}`, // Store as text in Excel by prefixing with `'`
               itemType,
               itemDescription,
               sizeOrSource,
@@ -266,18 +270,18 @@ const GenerateReports = () => {
       }
     });
 
-    // Set column widths dynamically
-    worksheet["!cols"] = headers[0].map((header) => ({
-      wch: header.length + 5,
-    }));
-
     // **Ensure Excel treats the date as plain text to avoid auto-formatting issues**
     formattedData.forEach((row, rowIndex) => {
       const cellRef = XLSX.utils.encode_cell({ r: rowIndex + 1, c: 0 }); // Date column (first column)
       if (worksheet[cellRef]) {
-        worksheet[cellRef].z = "@"; // Forces Excel to treat it as text
+        worksheet[cellRef].t = "s"; // Force text format
       }
     });
+
+    // Set column widths dynamically
+    worksheet["!cols"] = headers[0].map((header) => ({
+      wch: header.length + 5,
+    }));
 
     // Create workbook & append styled worksheet
     const workbook = XLSX.utils.book_new();
