@@ -204,9 +204,10 @@ const GenerateReports = () => {
 
     // Helper function to format date as DD/MM/YYYY (British format)
     const formatDateBritish = (dateString) => {
-      if (!dateString) return ""; // Return empty string if no date is provided
+      if (!dateString) return ""; // Return an empty string if no date is provided
+
       const date = new Date(dateString);
-      // if (isNaN(date)) return "Invalid Date"; // Handle invalid date cases
+      if (isNaN(date.getTime())) return ""; // Handle invalid dates properly
 
       // Extract day, month, and year
       const day = String(date.getDate()).padStart(2, "0");
@@ -228,25 +229,25 @@ const GenerateReports = () => {
         deliveryNumber,
         checkoutNumber,
       }) => {
-        const formattedDate = formatDateBritish(deliveryDate); // Convert date before adding to Excel
+        const formattedDate = formatDateBritish(deliveryDate); // Ensure valid date
 
         return isDeliveryReport
           ? [
-              `'${formattedDate}`, // Store as text in Excel by prefixing with `'`
-              itemType,
-              itemDescription,
-              sizeOrSource,
-              quantity,
-              serialNumber,
+              formattedDate ? `'${formattedDate}` : "", // Store as text in Excel
+              itemType || "",
+              itemDescription || "",
+              sizeOrSource || "",
+              quantity || "",
+              serialNumber || "",
               deliveryNumber || "",
             ]
           : [
-              `'${formattedDate}`, // Store as text in Excel by prefixing with `'`
-              itemType,
-              itemDescription,
-              sizeOrSource,
-              quantity,
-              serialNumber,
+              formattedDate ? `'${formattedDate}` : "", // Store as text in Excel
+              itemType || "",
+              itemDescription || "",
+              sizeOrSource || "",
+              quantity || "",
+              serialNumber || "",
               checkoutNumber || "",
             ];
       }
