@@ -178,49 +178,22 @@ const GenerateReports = () => {
   // Export to Excel function
   const exportToExcel = () => {
     // Define headers dynamically based on report type
-    const headers = isDeliveryReport
-      ? [
-          [
-            "Date",
-            "Item Type",
-            "Item Description",
-            "Size/Source",
-            "Quantity",
-            "Serial Number",
-            "Delivery Number",
-          ],
-        ]
-      : [
-          [
-            "Date",
-            "Item Type",
-            "Item Description",
-            "Size/Source",
-            "Quantity",
-            "Serial Number",
-            "Checkout Number",
-          ],
-        ];
+    const headers = [
+      [
+        "Date",
+        "Item Type",
+        "Item Description",
+        "Size/Source",
+        "Quantity",
+        "Serial Number",
+        isDeliveryReport ? "Delivery Number" : "Checkout Number",
+      ],
+    ];
 
-    // Helper function to format date as DD/MM/YYYY (British format)
-    const formatDateBritish = (dateString) => {
-      if (!dateString) return ""; // Return an empty string if no date is provided
-
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return ""; // Handle invalid dates properly
-
-      // Extract day, month, and year
-      const day = String(date.getDate()).padStart(2, "0");
-      const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are zero-based
-      const year = date.getFullYear();
-
-      return `${day}/${month}/${year}`; // British format (DD/MM/YYYY)
-    };
-
-    // Format data based on report type
+    // Use the same date displayed in the DataGrid
     const formattedData = reportData.map(
       ({
-        deliveryDate,
+        deliveryDate, // Use the already formatted date
         itemType,
         itemDescription,
         sizeOrSource,
@@ -228,68 +201,24 @@ const GenerateReports = () => {
         serialNumber,
         deliveryNumber,
         checkoutNumber,
-      }) => {
-        const formattedDate = formatDateBritish(deliveryDate); // Ensure valid date
-
-        return isDeliveryReport
-          ? [
-              formattedDate ? `'${formattedDate}` : "", // Store as text in Excel
-              itemType || "",
-              itemDescription || "",
-              sizeOrSource || "",
-              quantity || "",
-              serialNumber || "",
-              deliveryNumber || "",
-            ]
-          : [
-              formattedDate ? `'${formattedDate}` : "", // Store as text in Excel
-              itemType || "",
-              itemDescription || "",
-              sizeOrSource || "",
-              quantity || "",
-              serialNumber || "",
-              checkoutNumber || "",
-            ];
-      }
+      }) => [
+        deliveryDate || "", // Directly use the date as displayed in the table
+        itemType || "",
+        itemDescription || "",
+        sizeOrSource || "",
+        quantity || "",
+        serialNumber || "",
+        isDeliveryReport ? deliveryNumber || "" : checkoutNumber || "",
+      ]
     );
 
     // Create worksheet & add data
     const worksheet = XLSX.utils.aoa_to_sheet([...headers, ...formattedData]);
 
-    // Define header style
-    const headerStyle = {
-      font: { bold: true, sz: 14, color: { rgb: "FFFFFF" } }, // White bold text
-      fill: { fgColor: { rgb: "4F81BD" } }, // Matte blue background
-      alignment: { horizontal: "center", vertical: "center" },
-    };
-
-    // Apply styles to headers
-    headers[0].forEach((_, colIndex) => {
-      const cellRef = XLSX.utils.encode_cell({ r: 0, c: colIndex });
-      if (worksheet[cellRef]) {
-        worksheet[cellRef].s = headerStyle;
-      }
-    });
-
-    // **Ensure Excel treats the date as plain text to avoid auto-formatting issues**
-    formattedData.forEach((row, rowIndex) => {
-      const cellRef = XLSX.utils.encode_cell({ r: rowIndex + 1, c: 0 }); // Date column (first column)
-      if (worksheet[cellRef]) {
-        worksheet[cellRef].t = "s"; // Force text format
-      }
-    });
-
-    // Set column widths dynamically
-    worksheet["!cols"] = headers[0].map((header) => ({
-      wch: header.length + 5,
-    }));
-
-    // Create workbook & append styled worksheet
+    // Create workbook & export
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Styled Report");
-
-    // Export the Excel file
-    XLSX.writeFile(workbook, "Styled_Report.xlsx");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
+    XLSX.writeFile(workbook, "Report.xlsx");
   };
 
   useEffect(() => {
