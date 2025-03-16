@@ -205,7 +205,7 @@ const GenerateReports = () => {
     // Format data based on report type
     const formattedData = reportData.map(
       ({
-        deliveryDate, // Ensure the date is formatted
+        deliveryDate,
         itemType,
         itemDescription,
         sizeOrSource,
@@ -213,10 +213,14 @@ const GenerateReports = () => {
         serialNumber,
         deliveryNumber,
         checkoutNumber,
-      }) =>
-        isDeliveryReport
+      }) => {
+        const parsedDate = new Date(deliveryDate);
+
+        return isDeliveryReport
           ? [
-              new Date(deliveryDate).toLocaleDateString("en-GB"), // Convert date
+              parsedDate instanceof Date && !isNaN(parsedDate)
+                ? parsedDate
+                : "", // Keep Date object for Excel
               itemType,
               itemDescription,
               sizeOrSource,
@@ -225,18 +229,30 @@ const GenerateReports = () => {
               deliveryNumber || "",
             ]
           : [
-              new Date(deliveryDate).toLocaleDateString("en-GB"), // Convert date
+              parsedDate instanceof Date && !isNaN(parsedDate)
+                ? parsedDate
+                : "", // Keep Date object for Excel
               itemType,
               itemDescription,
               sizeOrSource,
               quantity,
               serialNumber,
               checkoutNumber || "",
-            ]
+            ];
+      }
     );
 
     // Create worksheet & add data
     const worksheet = XLSX.utils.aoa_to_sheet([...headers, ...formattedData]);
+
+    // Apply British date format to the first column
+    formattedData.forEach((_, rowIndex) => {
+      const cellRef = XLSX.utils.encode_cell({ r: rowIndex + 1, c: 0 }); // Date column (A)
+      if (worksheet[cellRef]) {
+        worksheet[cellRef].t = "d"; // Set cell type as Date
+        worksheet[cellRef].z = "dd/mm/yyyy"; // Set British format
+      }
+    });
 
     // Define header style
     const headerStyle = {
@@ -253,7 +269,7 @@ const GenerateReports = () => {
       }
     });
 
-    // Set column widths dynamically based on header size
+    // Set column widths dynamically
     worksheet["!cols"] = headers[0].map((header) => ({
       wch: header.length + 5,
     }));
