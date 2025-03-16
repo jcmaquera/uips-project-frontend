@@ -202,6 +202,16 @@ const GenerateReports = () => {
           ],
         ];
 
+    // Helper function to format date as DD/MM/YYYY
+    const formatDateBritish = (dateString) => {
+      const date = new Date(dateString);
+      if (isNaN(date)) return "Invalid Date";
+      const day = String(date.getDate()).padStart(2, "0"); // Ensure 2-digit day
+      const month = String(date.getMonth() + 1).padStart(2, "0"); // Ensure 2-digit month (months are 0-based)
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`; // British format (DD/MM/YYYY)
+    };
+
     // Format data based on report type
     const formattedData = reportData.map(
       ({
@@ -214,14 +224,7 @@ const GenerateReports = () => {
         deliveryNumber,
         checkoutNumber,
       }) => {
-        // Convert date to British format (DD/MM/YYYY)
-        let formattedDate = "Invalid Date";
-        if (deliveryDate) {
-          const parsedDate = new Date(deliveryDate);
-          if (!isNaN(parsedDate)) {
-            formattedDate = parsedDate.toLocaleDateString("en-GB"); // Ensures DD/MM/YYYY format
-          }
-        }
+        const formattedDate = formatDateBritish(deliveryDate); // Convert date before adding to Excel
 
         return isDeliveryReport
           ? [
@@ -268,7 +271,7 @@ const GenerateReports = () => {
       wch: header.length + 5,
     }));
 
-    // **Force Excel to treat the date as text to prevent formatting issues**
+    // **Ensure Excel treats the date as plain text to avoid auto-formatting issues**
     formattedData.forEach((row, rowIndex) => {
       const cellRef = XLSX.utils.encode_cell({ r: rowIndex + 1, c: 0 }); // Date column (first column)
       if (worksheet[cellRef]) {
