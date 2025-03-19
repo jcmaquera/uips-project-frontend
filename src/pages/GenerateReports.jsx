@@ -64,18 +64,27 @@ const GenerateReports = () => {
     }
   };
 
+  // Format dates for input and display
+  const formatDateForDisplay = (date) => {
+    if (!date) return "";
+    const [year, month, day] = date.split("-");
+    return `${day}/${month}/${year}`;
+  };
+
+  const formatDateForInput = (date) => {
+    if (!date) return "";
+    const [day, month, year] = date.split("/");
+    return `${year}-${month}-${day}`;
+  };
+
   const handleStartDateChange = (e) => {
     const inputDate = e.target.value;
-    // Convert the input date (yyyy-mm-dd) to dd/mm/yyyy format
-    const formattedDate = inputDate.split("-").reverse().join("/");
-    setStartDate(formattedDate);
+    setStartDate(formatDateForDisplay(inputDate)); // Store in British format
   };
 
   const handleEndDateChange = (e) => {
     const inputDate = e.target.value;
-    // Convert the input date (yyyy-mm-dd) to dd/mm/yyyy format
-    const formattedDate = inputDate.split("-").reverse().join("/");
-    setEndDate(formattedDate);
+    setEndDate(formatDateForDisplay(inputDate)); // Store in British format
   };
 
   // Fetch Inventory Data
@@ -109,8 +118,8 @@ const GenerateReports = () => {
         : "/generate-report-with-invoice-number";
 
       const response = await axiosInstance.post(url, {
-        startDate,
-        endDate,
+        startDate: formatDateForInput(startDate), // Send as yyyy-mm-dd format
+        endDate: formatDateForInput(endDate), // Send as yyyy-mm-dd format
       });
 
       if (
@@ -188,7 +197,6 @@ const GenerateReports = () => {
     }
   };
 
-  // Export to Excel function
   // Export to Excel function
   const exportToExcel = () => {
     // Define headers dynamically based on report type
@@ -337,8 +345,8 @@ const GenerateReports = () => {
                 type="date"
                 label="Start Date"
                 fullWidth
-                value={startDate.split("/").reverse().join("-")} // Convert to yyyy-mm-dd format for input
-                onChange={handleStartDateChange} // Handle change to convert to British format
+                value={formatDateForInput(startDate)} // Show value in yyyy-mm-dd format for input
+                onChange={handleStartDateChange} // Update state with British format (dd/mm/yyyy)
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
@@ -347,8 +355,8 @@ const GenerateReports = () => {
                 type="date"
                 label="End Date"
                 fullWidth
-                value={endDate.split("/").reverse().join("-")} // Convert to yyyy-mm-dd format for input
-                onChange={handleEndDateChange} // Handle change to convert to British format
+                value={formatDateForInput(endDate)} // Show value in yyyy-mm-dd format for input
+                onChange={handleEndDateChange} // Update state with British format (dd/mm/yyyy)
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
@@ -379,35 +387,16 @@ const GenerateReports = () => {
           columns={columns}
           pageSize={5}
           disableSelectionOnClick
-          sx={{
-            ".MuiDataGrid-columnHeader": {
-              fontWeight: "bold",
-              fontSize: "0.85rem", // Smaller font size for headers
-            },
-            width: "100%",
-            // Adjusting the responsiveness
-            "& .MuiDataGrid-cell": {
-              fontSize: "0.85rem", // Smaller font size for table content
-              padding: "6px 8px", // Smaller padding inside cells
-            },
-            "@media (max-width: 600px)": {
-              "& .MuiDataGrid-columnHeader": {
-                fontSize: "0.75rem", // Smaller font size on small screens
-              },
-              "& .MuiDataGrid-cell": {
-                fontSize: "0.75rem", // Smaller font size on small screens
-              },
-            },
-          }}
+          autoHeight
+          rowHeight={45}
         />
       </div>
 
-      {/* Export to Excel Button */}
       <Button
         variant="contained"
         color="success"
-        style={{ marginTop: "20px", marginLeft: "10px" }}
-        onClick={exportToExcel}
+        style={{ marginTop: "20px", width: "100%" }}
+        onClick={exportToExcel} // Trigger export function
       >
         Export to Excel
       </Button>
