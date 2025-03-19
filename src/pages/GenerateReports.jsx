@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFnsV3";
 import { enGB } from "date-fns/locale"; // Import locale (can change based on user locale)
 import * as XLSX from "xlsx-js-style"; // Importing XLSX library
 
@@ -320,24 +320,21 @@ const GenerateReports = () => {
         <DialogTitle>Select Date Range</DialogTitle>
         <DialogContent>
           <LocalizationProvider dateAdapter={AdapterDateFns} locale={enGB}>
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <DatePicker
-                  label="Start Date"
-                  value={startDate}
-                  onChange={(date) => setStartDate(date)}
-                  renderInput={(params) => <TextField {...params} fullWidth />}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <DatePicker
-                  label="End Date"
-                  value={endDate}
-                  onChange={(date) => setEndDate(date)}
-                  renderInput={(params) => <TextField {...params} fullWidth />}
-                />
-              </Grid>
-            </Grid>
+            <DatePicker
+              label="Start Date"
+              value={startDate}
+              onChange={(date) => setStartDate(date)}
+              renderInput={(params) => <TextField {...params} fullWidth />}
+            />
+          </LocalizationProvider>
+
+          <LocalizationProvider dateAdapter={AdapterDateFns} locale={enGB}>
+            <DatePicker
+              label="End Date"
+              value={endDate}
+              onChange={(date) => setEndDate(date)}
+              renderInput={(params) => <TextField {...params} fullWidth />}
+            />
           </LocalizationProvider>
         </DialogContent>
 
