@@ -350,7 +350,7 @@ const AddDelivery = () => {
         </Box>
 
         {/* File Upload Button */}
-        <Grid container justifyContent="center" style={{ marginTop: "20px" }}>
+        {/* <Grid container justifyContent="center" style={{ marginTop: "20px" }}>
           <Grid item xs={3}>
             <input
               type="file"
@@ -358,7 +358,7 @@ const AddDelivery = () => {
               onChange={(e) => handleFileUpload(e.target.files[0])}
             />
           </Grid>
-        </Grid>
+        </Grid> */}
 
         {/* Add Delivery Button */}
         <Grid container justifyContent="center" style={{ marginTop: "30px" }}>
