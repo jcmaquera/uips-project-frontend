@@ -187,6 +187,10 @@ const AddDelivery = () => {
       });
   };
 
+  const handleClearItems = () => {
+    setItems([]); // Clear all items from the list
+  };
+
   const handleKeyDown = (event) => {
     if (event.key === "Enter") {
       handleAddItem();
@@ -317,6 +321,17 @@ const AddDelivery = () => {
               disabled={loading}
             >
               {loading ? "Loading..." : "Add Item"}
+            </Button>
+          </Grid>
+          {/* Clear Button */}
+          <Grid item xs={2}>
+            <Button
+              variant="outlined"
+              color="secondary"
+              onClick={handleClearItems}
+              style={{ height: "100%" }}
+            >
+              Clear Items
             </Button>
           </Grid>
         </Grid>
