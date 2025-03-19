@@ -53,19 +53,26 @@ const InventorySummary = () => {
   const handleSearch = (event) => {
     setSearchQuery(event.target.value);
 
-    const filtered = inventoryData.filter(
-      (row) =>
-        row.itemType.toLowerCase().includes(event.target.value.toLowerCase()) ||
-        row.itemDescription
-          .toLowerCase()
-          .includes(event.target.value.toLowerCase()) ||
-        row.serialNumber
-          .toLowerCase()
-          .includes(event.target.value.toLowerCase()) ||
-        row.sizeOrSource
-          .toLowerCase()
-          .includes(event.target.value.toLowerCase())
-    );
+    const filtered = inventoryData.filter((row) => {
+      // Use a fallback to empty string if the field is undefined or null
+      const itemType = row.itemType ? row.itemType.toLowerCase() : "";
+      const itemDescription = row.itemDescription
+        ? row.itemDescription.toLowerCase()
+        : "";
+      const serialNumber = row.serialNumber
+        ? row.serialNumber.toLowerCase()
+        : "";
+      const sizeOrSource = row.sizeOrSource
+        ? row.sizeOrSource.toLowerCase()
+        : "";
+
+      return (
+        itemType.includes(event.target.value.toLowerCase()) ||
+        itemDescription.includes(event.target.value.toLowerCase()) ||
+        serialNumber.includes(event.target.value.toLowerCase()) ||
+        sizeOrSource.includes(event.target.value.toLowerCase())
+      );
+    });
 
     setFilteredData(filtered);
   };
