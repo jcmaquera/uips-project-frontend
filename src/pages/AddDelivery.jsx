@@ -18,7 +18,6 @@ import * as XLSX from "xlsx"; // Import XLSX library
 
 const AddDelivery = () => {
   const [serialNumber, setSerialNumber] = useState(""); // Serial number input state
-  const [quantity, setQuantity] = useState(1); // Quantity input state
   const [items, setItems] = useState([]); // Items to be displayed in the table
   const [successMessage, setSuccessMessage] = useState(false); // Success message for adding items
   const [loading, setLoading] = useState(false); // Loading state
@@ -26,6 +25,11 @@ const AddDelivery = () => {
   const [deliveryNumber, setDeliveryNumber] = useState(""); // Delivery Number input state
   const [submissionSuccess, setSubmissionSuccess] = useState(false); // Submission success state
   const [userInfo, setUserInfo] = useState(null);
+
+  // New state for quantity modal
+  const [selectedItem, setSelectedItem] = useState(null); // Selected item for adding quantity
+  const [quantityInput, setQuantityInput] = useState(1); // Quantity input for modal
+  const [openQuantityModal, setOpenQuantityModal] = useState(false); // Open modal state for quantity
 
   // Column definition for DataGrid
   const columns = [
@@ -66,11 +70,6 @@ const AddDelivery = () => {
       return;
     }
 
-    if (quantity <= 0) {
-      alert("Quantity must be greater than 0!");
-      return;
-    }
-
     setLoading(true);
     try {
       const response = await axiosInstance.post("/get-item-by-serial", {
@@ -78,29 +77,8 @@ const AddDelivery = () => {
       });
 
       if (response.data && response.data.item) {
-        const newItem = {
-          ...response.data.item,
-          id: response.data.item._id, // This is the _id from the Item document
-          quantity: quantity,
-        };
-
-        const existingItemIndex = items.findIndex(
-          (item) => item.serialNo === serialNumber
-        );
-
-        if (existingItemIndex !== -1) {
-          const updatedItems = [...items];
-          updatedItems[existingItemIndex] = {
-            ...updatedItems[existingItemIndex],
-            quantity: updatedItems[existingItemIndex].quantity + quantity,
-          };
-          setItems(updatedItems);
-        } else {
-          setItems([...items, newItem]);
-        }
-
-        setSuccessMessage(true);
-        setTimeout(() => setSuccessMessage(false), 3000);
+        setSelectedItem(response.data.item); // Set selected item for quantity modal
+        setOpenQuantityModal(true); // Open the quantity modal
       } else {
         alert("Item not found.");
       }
@@ -110,8 +88,38 @@ const AddDelivery = () => {
     } finally {
       setLoading(false);
       setSerialNumber("");
-      setQuantity(1);
     }
+  };
+
+  const handleQuantitySubmit = () => {
+    if (quantityInput <= 0) {
+      alert("Quantity must be greater than 0!");
+      return;
+    }
+
+    const newItem = {
+      ...selectedItem,
+      id: selectedItem._id, // This is the _id from the Item document
+      quantity: quantityInput,
+    };
+
+    const existingItemIndex = items.findIndex(
+      (item) => item.serialNo === selectedItem.serialNo
+    );
+
+    if (existingItemIndex !== -1) {
+      const updatedItems = [...items];
+      updatedItems[existingItemIndex] = {
+        ...updatedItems[existingItemIndex],
+        quantity: updatedItems[existingItemIndex].quantity + quantityInput,
+      };
+      setItems(updatedItems);
+    } else {
+      setItems([...items, newItem]);
+    }
+
+    setOpenQuantityModal(false); // Close the modal
+    setQuantityInput(1); // Reset the quantity input
   };
 
   const handleAddDelivery = () => {
@@ -273,16 +281,6 @@ const AddDelivery = () => {
             />
           </Grid>
           <Grid item xs={2}>
-            <TextField
-              label="Quantity"
-              type="number"
-              value={quantity}
-              onChange={(e) => setQuantity(Math.max(1, e.target.value))}
-              fullWidth
-              onKeyDown={handleKeyDown}
-            />
-          </Grid>
-          <Grid item xs={2}>
             <Button
               variant="contained"
               color="primary"
@@ -367,6 +365,31 @@ const AddDelivery = () => {
             {loading ? "Submitting..." : "Submit Delivery"}
           </Button>
           <Button onClick={() => setOpenModal(false)}>Cancel</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Modal for Quantity Input */}
+      <Dialog
+        open={openQuantityModal}
+        onClose={() => setOpenQuantityModal(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Enter Quantity</DialogTitle>
+        <DialogContent>
+          <TextField
+            label="Quantity"
+            type="number"
+            value={quantityInput}
+            onChange={(e) => setQuantityInput(Math.max(1, e.target.value))}
+            fullWidth
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button color="primary" onClick={handleQuantitySubmit}>
+            Submit
+          </Button>
+          <Button onClick={() => setOpenQuantityModal(false)}>Cancel</Button>
         </DialogActions>
       </Dialog>
     </>
