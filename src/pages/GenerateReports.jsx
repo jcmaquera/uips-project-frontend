@@ -17,6 +17,8 @@ import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFnsV3";
 import { enGB } from "date-fns/locale"; // Import locale (can change based on user locale)
 import * as XLSX from "xlsx-js-style"; // Importing XLSX library
+import { de } from 'date-fns/locale/de';
+import { deDE } from "@mui/material/locale";
 
 const GenerateReports = () => {
   const [userInfo, setUserInfo] = useState(null);
