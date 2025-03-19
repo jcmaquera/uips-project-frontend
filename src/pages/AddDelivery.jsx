@@ -377,12 +377,9 @@ const AddDelivery = () => {
             value={deliveryNumber}
             onChange={(e) => setDeliveryNumber(e.target.value)}
             style={{ marginBottom: "20px" }}
+            error={deliveryExists}
+            helperText={deliveryExists ? "Delivery number already exists" : ""}
           />
-          {checkoutNumberExists && (
-            <Alert severity="error" sx={{ marginBottom: "20px" }}>
-              The checkout number already exists. Please enter a unique one.
-            </Alert>
-          )}
           <Typography variant="body1">Items in this delivery:</Typography>
           <ul>
             {items.map((item, index) => (
