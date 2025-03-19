@@ -266,7 +266,7 @@ const Checkout = () => {
           </Grid>
           <Grid item xs={2}>
             <Button
-              variant="contained"
+              variant="outlined"
               color="secondary"
               onClick={handleClearItems}
               style={{ height: "100%" }}
