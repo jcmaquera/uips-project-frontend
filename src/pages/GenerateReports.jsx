@@ -325,6 +325,7 @@ const GenerateReports = () => {
               value={startDate}
               onChange={(date) => setStartDate(date)}
               renderInput={(params) => <TextField {...params} fullWidth />}
+              inputFormat="dd/MM/yyyy" // Set the format directly here
             />
           </LocalizationProvider>
 
@@ -334,6 +335,7 @@ const GenerateReports = () => {
               value={endDate}
               onChange={(date) => setEndDate(date)}
               renderInput={(params) => <TextField {...params} fullWidth />}
+              inputFormat="dd/MM/yyyy" // Set the format directly here
             />
           </LocalizationProvider>
         </DialogContent>
