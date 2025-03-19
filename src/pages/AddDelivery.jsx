@@ -28,6 +28,7 @@ const AddDelivery = () => {
   const [userInfo, setUserInfo] = useState(null);
   const [openQuantityModal, setOpenQuantityModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [openSubmitModal, setOpenSubmitModal] = useState(false);
 
   const columns = [
     { field: "itemType", headerName: "Item Type", flex: 1, minWidth: 150 },
@@ -85,6 +86,27 @@ const AddDelivery = () => {
     setQuantity(1);
   };
 
+  const handleSubmitDelivery = async () => {
+    if (items.length === 0) {
+      alert("No items to submit!");
+      return;
+    }
+    try {
+      await axiosInstance.post("/submit-delivery", {
+        deliveryNumber,
+        items,
+      });
+      setSubmissionSuccess(true);
+      setItems([]);
+      setDeliveryNumber("");
+      setOpenSubmitModal(false);
+      alert("Delivery submitted successfully!");
+    } catch (error) {
+      console.error("Error submitting delivery:", error);
+      alert("Error submitting delivery. Please try again.");
+    }
+  };
+
   return (
     <>
       <Navbar userInfo={userInfo} />
@@ -115,6 +137,10 @@ const AddDelivery = () => {
         <Box sx={{ height: 400, width: "100%", marginTop: "20px" }}>
           <DataGrid rows={items.map((item, index) => ({ ...item, id: item.serialNo || index }))} columns={columns} pageSize={5} />
         </Box>
+
+        <Button variant="contained" color="secondary" onClick={() => setOpenSubmitModal(true)} sx={{ marginTop: "20px" }}>
+          Submit Delivery
+        </Button>
       </div>
 
       <Dialog open={openQuantityModal} onClose={() => setOpenQuantityModal(false)}>
@@ -133,6 +159,17 @@ const AddDelivery = () => {
         <DialogActions>
           <Button onClick={handleAddItemWithQuantity} color="primary">Add Item</Button>
           <Button onClick={() => setOpenQuantityModal(false)}>Cancel</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={openSubmitModal} onClose={() => setOpenSubmitModal(false)}>
+        <DialogTitle>Confirm Delivery Submission</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1">Are you sure you want to submit this delivery?</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleSubmitDelivery} color="primary">Submit</Button>
+          <Button onClick={() => setOpenSubmitModal(false)}>Cancel</Button>
         </DialogActions>
       </Dialog>
     </>
