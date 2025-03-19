@@ -2,13 +2,15 @@ import React, { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../utils/axiosInstance";
-import { Paper, Grid, Typography, Button } from "@mui/material";
+import { Paper, Grid, Typography, Button, TextField } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid"; // Import DataGrid component
 import * as XLSX from "xlsx"; // Importing XLSX library
 
 const InventorySummary = () => {
   const [userInfo, setUserInfo] = useState(null);
   const [inventoryData, setInventoryData] = useState([]);
+  const [searchQuery, setSearchQuery] = useState(""); // State to hold search query
+  const [filteredData, setFilteredData] = useState([]); // State for filtered data
   const [pageSize, setPageSize] = useState(5); // Default page size
 
   const navigate = useNavigate();
@@ -41,14 +43,36 @@ const InventorySummary = () => {
         serialNumber: inventory.item.serialNo,
       }));
       setInventoryData(mappedData); // Store mapped data
+      setFilteredData(mappedData); // Initialize filtered data
     } catch (error) {
       console.error("Error fetching inventory data:", error);
     }
   };
 
+  // Filter data based on search query
+  const handleSearch = (event) => {
+    setSearchQuery(event.target.value);
+
+    const filtered = inventoryData.filter(
+      (row) =>
+        row.itemType.toLowerCase().includes(event.target.value.toLowerCase()) ||
+        row.itemDescription
+          .toLowerCase()
+          .includes(event.target.value.toLowerCase()) ||
+        row.serialNumber
+          .toLowerCase()
+          .includes(event.target.value.toLowerCase()) ||
+        row.sizeOrSource
+          .toLowerCase()
+          .includes(event.target.value.toLowerCase())
+    );
+
+    setFilteredData(filtered);
+  };
+
   // Export to Excel function
   const exportToExcel = () => {
-    const worksheet = XLSX.utils.json_to_sheet(inventoryData); // Convert data to worksheet
+    const worksheet = XLSX.utils.json_to_sheet(filteredData); // Convert filtered data to worksheet
     const workbook = XLSX.utils.book_new(); // Create new workbook
     XLSX.utils.book_append_sheet(workbook, worksheet, "Inventory"); // Add sheet to workbook
 
@@ -93,10 +117,20 @@ const InventorySummary = () => {
           Inventory Summary
         </Typography>
 
+        {/* Search Bar */}
+        <TextField
+          label="Search Inventory"
+          variant="outlined"
+          fullWidth
+          value={searchQuery}
+          onChange={handleSearch}
+          style={{ marginBottom: "20px" }}
+        />
+
         {/* DataGrid Table for Inventory */}
         <div style={{ height: 400, width: "100%", marginTop: "20px" }}>
           <DataGrid
-            rows={inventoryData}
+            rows={filteredData}
             columns={columns}
             pageSize={pageSize}
             disableSelectionOnClick
