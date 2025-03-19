@@ -222,12 +222,6 @@ const Checkout = () => {
         </Alert>
       )}
 
-      {checkoutNumberExists && (
-        <Alert severity="error" sx={{ marginBottom: "20px" }}>
-          The checkout number already exists. Please choose a unique one.
-        </Alert>
-      )}
-
       <div style={{ padding: "30px" }}>
         <Grid
           container
@@ -311,6 +305,11 @@ const Checkout = () => {
             onChange={(e) => setCheckoutNumber(e.target.value)}
             style={{ marginBottom: "20px" }}
           />
+          {checkoutNumberExists && (
+            <Alert severity="error" sx={{ marginBottom: "20px" }}>
+              The checkout number already exists. Please enter a unique one.
+            </Alert>
+          )}
           <Typography variant="body1">Items in this checkout:</Typography>
           <ul>
             {items.map((item, index) => (
