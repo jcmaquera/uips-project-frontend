@@ -264,6 +264,16 @@ const Checkout = () => {
               {loading ? "Loading..." : "Add Item"}
             </Button>
           </Grid>
+          <Grid item xs={2}>
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={handleClearItems}
+              style={{ height: "100%" }}
+            >
+              Clear Items
+            </Button>
+          </Grid>
         </Grid>
 
         <Box sx={{ height: 400, width: "100%" }}>
@@ -277,15 +287,6 @@ const Checkout = () => {
         </Box>
 
         <Grid container justifyContent="center" style={{ marginTop: "30px" }}>
-          <Grid item xs={3}>
-            <Button
-              variant="contained"
-              color="secondary"
-              onClick={handleClearItems}
-            >
-              Clear Items
-            </Button>
-          </Grid>
           <Grid item xs={3}>
             <Button
               variant="contained"
