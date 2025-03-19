@@ -324,7 +324,7 @@ const AddDelivery = () => {
             </Button>
           </Grid>
           {/* Clear Button placed beside Add Item */}
-          <Grid item xs={2} style={{ marginLeft: "20px" }}>
+          <Grid item xs={2}>
             <Button
               variant="outlined"
               color="secondary"
