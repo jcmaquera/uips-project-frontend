@@ -13,6 +13,9 @@ import {
   DialogTitle,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
+import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { enGB } from "date-fns/locale"; // Import locale (can change based on user locale)
 import * as XLSX from "xlsx-js-style"; // Importing XLSX library
 
 const GenerateReports = () => {
@@ -20,8 +23,8 @@ const GenerateReports = () => {
   const [inventoryData, setInventoryData] = useState([]);
   const [reportData, setReportData] = useState([]);
   const [openDateDialog, setOpenDateDialog] = useState(false);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
   const [isDeliveryReport, setIsDeliveryReport] = useState(true); // Flag for report type
   const [columns, setColumns] = useState([
     { field: "deliveryDate", headerName: "Date", flex: 1, minWidth: 140 },
@@ -64,29 +67,6 @@ const GenerateReports = () => {
     }
   };
 
-  // Format dates for input and display
-  const formatDateForDisplay = (date) => {
-    if (!date) return "";
-    const [year, month, day] = date.split("-");
-    return `${day}/${month}/${year}`;
-  };
-
-  const formatDateForInput = (date) => {
-    if (!date) return "";
-    const [day, month, year] = date.split("/");
-    return `${year}-${month}-${day}`;
-  };
-
-  const handleStartDateChange = (e) => {
-    const inputDate = e.target.value;
-    setStartDate(formatDateForDisplay(inputDate)); // Store in British format
-  };
-
-  const handleEndDateChange = (e) => {
-    const inputDate = e.target.value;
-    setEndDate(formatDateForDisplay(inputDate)); // Store in British format
-  };
-
   // Fetch Inventory Data
   const fetchInventoryData = async () => {
     try {
@@ -118,8 +98,8 @@ const GenerateReports = () => {
         : "/generate-report-with-invoice-number";
 
       const response = await axiosInstance.post(url, {
-        startDate: formatDateForInput(startDate), // Send as yyyy-mm-dd format
-        endDate: formatDateForInput(endDate), // Send as yyyy-mm-dd format
+        startDate: startDate.toISOString().split("T")[0], // Convert date to yyyy-mm-dd
+        endDate: endDate.toISOString().split("T")[0], // Convert date to yyyy-mm-dd
       });
 
       if (
@@ -339,28 +319,26 @@ const GenerateReports = () => {
       >
         <DialogTitle>Select Date Range</DialogTitle>
         <DialogContent>
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                type="date"
-                label="Start Date"
-                fullWidth
-                value={formatDateForInput(startDate)} // Show value in yyyy-mm-dd format for input
-                onChange={handleStartDateChange} // Update state with British format (dd/mm/yyyy)
-                InputLabelProps={{ shrink: true }}
-              />
+          <LocalizationProvider dateAdapter={AdapterDateFns} locale={enGB}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <DatePicker
+                  label="Start Date"
+                  value={startDate}
+                  onChange={(date) => setStartDate(date)}
+                  renderInput={(params) => <TextField {...params} fullWidth />}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <DatePicker
+                  label="End Date"
+                  value={endDate}
+                  onChange={(date) => setEndDate(date)}
+                  renderInput={(params) => <TextField {...params} fullWidth />}
+                />
+              </Grid>
             </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                type="date"
-                label="End Date"
-                fullWidth
-                value={formatDateForInput(endDate)} // Show value in yyyy-mm-dd format for input
-                onChange={handleEndDateChange} // Update state with British format (dd/mm/yyyy)
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-          </Grid>
+          </LocalizationProvider>
         </DialogContent>
 
         <DialogActions>
