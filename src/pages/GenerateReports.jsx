@@ -319,23 +319,21 @@ const GenerateReports = () => {
       >
         <DialogTitle>Select Date Range</DialogTitle>
         <DialogContent>
-          <LocalizationProvider dateAdapter={AdapterDateFns} locale={enGB}>
+          <LocalizationProvider dateAdapter={AdapterDateFns} locale={de}>
             <DatePicker
               label="Start Date"
               value={startDate}
               onChange={(date) => setStartDate(date)}
               renderInput={(params) => <TextField {...params} fullWidth />}
-              inputFormat="dd/MM/yyyy" // Set the format directly here
             />
           </LocalizationProvider>
 
-          <LocalizationProvider dateAdapter={AdapterDateFns} locale={enGB}>
+          <LocalizationProvider dateAdapter={AdapterDateFns} locale={de}>
             <DatePicker
               label="End Date"
               value={endDate}
               onChange={(date) => setEndDate(date)}
               renderInput={(params) => <TextField {...params} fullWidth />}
-              inputFormat="dd/MM/yyyy" // Set the format directly here
             />
           </LocalizationProvider>
         </DialogContent>
