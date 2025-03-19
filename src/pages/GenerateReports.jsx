@@ -64,6 +64,20 @@ const GenerateReports = () => {
     }
   };
 
+  const handleStartDateChange = (e) => {
+    const inputDate = e.target.value;
+    // Convert the input date (yyyy-mm-dd) to dd/mm/yyyy format
+    const formattedDate = inputDate.split("-").reverse().join("/");
+    setStartDate(formattedDate);
+  };
+
+  const handleEndDateChange = (e) => {
+    const inputDate = e.target.value;
+    // Convert the input date (yyyy-mm-dd) to dd/mm/yyyy format
+    const formattedDate = inputDate.split("-").reverse().join("/");
+    setEndDate(formattedDate);
+  };
+
   // Fetch Inventory Data
   const fetchInventoryData = async () => {
     try {
@@ -323,8 +337,8 @@ const GenerateReports = () => {
                 type="date"
                 label="Start Date"
                 fullWidth
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
+                value={startDate.split("/").reverse().join("-")} // Convert to yyyy-mm-dd format for input
+                onChange={handleStartDateChange} // Handle change to convert to British format
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
@@ -333,13 +347,14 @@ const GenerateReports = () => {
                 type="date"
                 label="End Date"
                 fullWidth
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
+                value={endDate.split("/").reverse().join("-")} // Convert to yyyy-mm-dd format for input
+                onChange={handleEndDateChange} // Handle change to convert to British format
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
           </Grid>
         </DialogContent>
+
         <DialogActions>
           <Button onClick={() => setOpenDateDialog(false)} color="primary">
             Cancel
