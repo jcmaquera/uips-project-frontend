@@ -117,54 +117,80 @@ const Checkout = () => {
     }
   };
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (!checkoutNumber) {
       alert("Please enter a Checkout Number!");
       return;
     }
 
-    // Prepare the items for checkout submission
-    const formattedItems = items.map((item) => ({
-      item: item._id, // Ensure this is the correct field on the backend
-      quantity: item.quantity,
-    }));
+    // Check if the checkout number already exists before proceeding
+    try {
+      // Call backend to check if the checkout number exists
+      const response = await axiosInstance.get(
+        `/check-checkout-number/${checkoutNumber}`
+      );
 
-    // Log the formatted items for debugging
-    console.log("Formatted Items before submitting checkout:", formattedItems);
-
-    // Log the checkout number for debugging
-    console.log("Checkout Number:", checkoutNumber);
-
-    // Now submit the data to the backend (you can replace this with your actual API call)
-    setLoading(true);
-    axiosInstance
-      .post("/checkout", {
-        checkoutNumber: checkoutNumber,
-        checkoutDate: new Date(),
-        items: formattedItems,
-      })
-      .then((response) => {
-        console.log("Checkout submitted successfully:", response.data);
-        setSubmissionSuccess(true);
-        setTimeout(() => setSubmissionSuccess(false), 3000); // Hide success message after 3 seconds
-
-        // Reset the form fields and table
-        setSerialNumber("");
-        setQuantity(1);
-        setItems([]);
-        setCheckoutNumber("");
-      })
-      .catch((error) => {
-        console.error(
-          "Error submitting checkout:",
-          error.response?.data || error.message
+      if (response.data.exists) {
+        alert(
+          "The checkout number already exists. Please enter a unique checkout number."
         );
-        alert("There was an issue submitting the checkout. Please try again.");
-      })
-      .finally(() => {
-        setLoading(false);
-        setOpenModal(false); // Close the modal
-      });
+        return;
+      }
+
+      // Prepare the items for checkout submission
+      const formattedItems = items.map((item) => ({
+        item: item._id, // Ensure this is the correct field on the backend
+        quantity: item.quantity,
+      }));
+
+      // Log the formatted items for debugging
+      console.log(
+        "Formatted Items before submitting checkout:",
+        formattedItems
+      );
+
+      // Log the checkout number for debugging
+      console.log("Checkout Number:", checkoutNumber);
+
+      // Submit the checkout if the checkout number is unique
+      setLoading(true);
+      axiosInstance
+        .post("/checkout", {
+          checkoutNumber: checkoutNumber,
+          checkoutDate: new Date(),
+          items: formattedItems,
+        })
+        .then((response) => {
+          console.log("Checkout submitted successfully:", response.data);
+          setSubmissionSuccess(true);
+          setTimeout(() => setSubmissionSuccess(false), 3000); // Hide success message after 3 seconds
+
+          // Reset the form fields and table
+          setSerialNumber("");
+          setQuantity(1);
+          setItems([]);
+          setCheckoutNumber("");
+        })
+        .catch((error) => {
+          console.error(
+            "Error submitting checkout:",
+            error.response?.data || error.message
+          );
+          alert(
+            "There was an issue submitting the checkout. Please try again."
+          );
+        })
+        .finally(() => {
+          setLoading(false);
+          setOpenModal(false); // Close the modal
+        });
+    } catch (error) {
+      console.error(
+        "Error checking checkout number:",
+        error.response?.data || error.message
+      );
+      alert("Error checking the checkout number. Please try again.");
+    }
   };
 
   const handleKeyDown = (event) => {
