@@ -13,20 +13,15 @@ import {
   DialogTitle,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
-import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFnsV3";
-import { enGB } from "date-fns/locale"; // Import locale (can change based on user locale)
 import * as XLSX from "xlsx-js-style"; // Importing XLSX library
-import { de } from 'date-fns/locale/de';
-import { deDE } from "@mui/material/locale";
 
 const GenerateReports = () => {
   const [userInfo, setUserInfo] = useState(null);
   const [inventoryData, setInventoryData] = useState([]);
   const [reportData, setReportData] = useState([]);
   const [openDateDialog, setOpenDateDialog] = useState(false);
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [isDeliveryReport, setIsDeliveryReport] = useState(true); // Flag for report type
   const [columns, setColumns] = useState([
     { field: "deliveryDate", headerName: "Date", flex: 1, minWidth: 140 },
@@ -100,8 +95,8 @@ const GenerateReports = () => {
         : "/generate-report-with-invoice-number";
 
       const response = await axiosInstance.post(url, {
-        startDate: startDate.toISOString().split("T")[0], // Convert date to yyyy-mm-dd
-        endDate: endDate.toISOString().split("T")[0], // Convert date to yyyy-mm-dd
+        startDate,
+        endDate,
       });
 
       if (
@@ -179,6 +174,7 @@ const GenerateReports = () => {
     }
   };
 
+  // Export to Excel function
   // Export to Excel function
   const exportToExcel = () => {
     // Define headers dynamically based on report type
@@ -321,25 +317,29 @@ const GenerateReports = () => {
       >
         <DialogTitle>Select Date Range</DialogTitle>
         <DialogContent>
-          <LocalizationProvider dateAdapter={AdapterDateFns} locale={de}>
-            <DatePicker
-              label="Start Date"
-              value={startDate}
-              onChange={(date) => setStartDate(date)}
-              renderInput={(params) => <TextField {...params} fullWidth />}
-            />
-          </LocalizationProvider>
-
-          <LocalizationProvider dateAdapter={AdapterDateFns} locale={de}>
-            <DatePicker
-              label="End Date"
-              value={endDate}
-              onChange={(date) => setEndDate(date)}
-              renderInput={(params) => <TextField {...params} fullWidth />}
-            />
-          </LocalizationProvider>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                type="date"
+                label="Start Date"
+                fullWidth
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                type="date"
+                label="End Date"
+                fullWidth
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+          </Grid>
         </DialogContent>
-
         <DialogActions>
           <Button onClick={() => setOpenDateDialog(false)} color="primary">
             Cancel
@@ -364,16 +364,35 @@ const GenerateReports = () => {
           columns={columns}
           pageSize={5}
           disableSelectionOnClick
-          autoHeight
-          rowHeight={45}
+          sx={{
+            ".MuiDataGrid-columnHeader": {
+              fontWeight: "bold",
+              fontSize: "0.85rem", // Smaller font size for headers
+            },
+            width: "100%",
+            // Adjusting the responsiveness
+            "& .MuiDataGrid-cell": {
+              fontSize: "0.85rem", // Smaller font size for table content
+              padding: "6px 8px", // Smaller padding inside cells
+            },
+            "@media (max-width: 600px)": {
+              "& .MuiDataGrid-columnHeader": {
+                fontSize: "0.75rem", // Smaller font size on small screens
+              },
+              "& .MuiDataGrid-cell": {
+                fontSize: "0.75rem", // Smaller font size on small screens
+              },
+            },
+          }}
         />
       </div>
 
+      {/* Export to Excel Button */}
       <Button
         variant="contained"
         color="success"
-        style={{ marginTop: "20px", width: "100%" }}
-        onClick={exportToExcel} // Trigger export function
+        style={{ marginTop: "20px", marginLeft: "10px" }}
+        onClick={exportToExcel}
       >
         Export to Excel
       </Button>
