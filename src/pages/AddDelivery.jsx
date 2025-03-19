@@ -25,6 +25,7 @@ const AddDelivery = () => {
   const [deliveryNumber, setDeliveryNumber] = useState(""); // Delivery Number input state
   const [submissionSuccess, setSubmissionSuccess] = useState(false); // Submission success state
   const [userInfo, setUserInfo] = useState(null);
+  const [deliveryExists, setDeliveryExists] = useState(false); // Delivery exists flag
 
   // New state for quantity modal
   const [selectedItem, setSelectedItem] = useState(null); // Selected item for adding quantity
@@ -59,10 +60,31 @@ const AddDelivery = () => {
     }
   };
 
+  const checkIfDeliveryExists = async (deliveryNumber) => {
+    try {
+      const response = await axiosInstance.get(
+        `/check-delivery-existence/${deliveryNumber}`
+      );
+      if (response.data.exists) {
+        setDeliveryExists(true);
+      } else {
+        setDeliveryExists(false);
+      }
+    } catch (error) {
+      console.error("Error checking delivery existence:", error);
+    }
+  };
+
   useEffect(() => {
     getUserInfo();
     return () => {};
   }, []);
+
+  useEffect(() => {
+    if (deliveryNumber) {
+      checkIfDeliveryExists(deliveryNumber); // Check delivery existence every time the delivery number changes
+    }
+  }, [deliveryNumber]);
 
   const handleAddItem = async () => {
     if (!serialNumber) {
@@ -125,6 +147,12 @@ const AddDelivery = () => {
   const handleAddDelivery = () => {
     if (!deliveryNumber) {
       alert("Please enter a Delivery Number!");
+      return;
+    }
+
+    // Check if the delivery number already exists
+    if (deliveryExists) {
+      alert("Delivery number already exists! Please use a different number.");
       return;
     }
 
@@ -349,6 +377,8 @@ const AddDelivery = () => {
             value={deliveryNumber}
             onChange={(e) => setDeliveryNumber(e.target.value)}
             style={{ marginBottom: "20px" }}
+            error={deliveryExists}
+            helperText={deliveryExists ? "Delivery number already exists" : ""}
           />
           <Typography variant="body1">Items in this delivery:</Typography>
           <ul>
