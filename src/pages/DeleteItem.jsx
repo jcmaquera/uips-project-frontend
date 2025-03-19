@@ -200,6 +200,10 @@ const Checkout = () => {
       });
   };
 
+  const handleClearItems = () => {
+    setItems([]); // Clears the items in the checkout
+  };
+
   const handleKeyDown = (event) => {
     if (event.key === "Enter") {
       handleAddItem();
@@ -272,9 +276,17 @@ const Checkout = () => {
           />
         </Box>
 
-        {/* Checkout Button */}
         <Grid container justifyContent="center" style={{ marginTop: "30px" }}>
-          <Grid item>
+          <Grid item xs={3}>
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={handleClearItems}
+            >
+              Clear Items
+            </Button>
+          </Grid>
+          <Grid item xs={3}>
             <Button
               variant="contained"
               color="secondary"
