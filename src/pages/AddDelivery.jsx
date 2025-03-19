@@ -323,8 +323,8 @@ const AddDelivery = () => {
               {loading ? "Loading..." : "Add Item"}
             </Button>
           </Grid>
-          {/* Clear Button */}
-          <Grid item xs={2}>
+          {/* Clear Button placed beside Add Item */}
+          <Grid item xs={2} style={{ marginLeft: "20px" }}>
             <Button
               variant="outlined"
               color="secondary"
