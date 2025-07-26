@@ -56,7 +56,7 @@ const Login = () => {
   return (
     <>
       <Navbar />
-      <div className="h-screen flex items-center justify-center bg-[url('https://i.postimg.cc/13PYjXN9/19643763-6160408.jpg')] bg-cover bg-center">
+      <div className="h-screen flex items-center justify-center bg-[url('https://i.postimg.cc/qM12cC14/30132581-97z-2207-w009-n001-151a-p25-151.jpg')] bg-cover bg-center">
         <div className="flex items-center justify-center">
           <div className="w-96 border border-gray-300 rounded bg-white px-7 py-10">
             <form onSubmit={handleLogin}>
