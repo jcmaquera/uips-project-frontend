@@ -135,6 +135,24 @@ const AddItem = () => {
     }
   };
 
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this item?")) return;
+  
+    try {
+      const response = await axiosInstance.delete(`/delete-item/${id}`);
+      if (response.status === 200) {
+        // Remove deleted item from state
+        setItems((prevItems) => prevItems.filter((item) => item._id !== id));
+      } else {
+        alert("Error: " + (response.data.message || "Failed to delete item"));
+      }
+    } catch (error) {
+      alert(
+        "Error: " + (error.response?.data?.message || "Failed to delete item")
+      );
+    }
+  };
+
   return (
     <>
       <Navbar userInfo={userInfo} />
