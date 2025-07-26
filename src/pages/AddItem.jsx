@@ -69,6 +69,25 @@ const AddItem = () => {
     },
     { field: "sizeSource", headerName: "Size/Source", flex: 1, minWidth: 150 },
     { field: "serialNo", headerName: "Serial Number", flex: 1, minWidth: 150 },
+    {
+      field: "actions",
+      headerName: "Actions",
+      flex: 1,
+      minWidth: 120,
+      sortable: false,
+      renderCell: (params) => {
+        return (
+          <Button
+            variant="contained"
+            color="error"
+            size="small"
+            onClick={() => handleDelete(params.row._id)}
+          >
+            Delete
+          </Button>
+        );
+      },
+    },
   ];
 
   const itemTypes = [
